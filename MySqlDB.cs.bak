@@ -1,0 +1,175 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Data;
+using System.Data.Odbc;
+
+namespace DataBaseControl
+{
+	class DataBase : IDisposable
+	{
+		public OdbcConnection m_Connection;
+		private OdbcCommand m_Command;
+		private OdbcDataReader m_DataReader;
+
+        private string m_strIP;
+        private string m_strId;
+        private string m_strPw;
+        private string m_strDb;
+
+        //private bool m_bInit = false;
+
+        public void InitDBConnection(string a_strIP, string a_strId, string a_strPw, string a_strDb)
+        {
+            m_strIP = a_strIP;
+            m_strId = a_strId;
+            m_strPw = a_strPw;
+            m_strDb = a_strDb;
+        }
+
+		public int Connection()
+		{
+            m_Connection = new OdbcConnection();
+            if (m_Connection.State != ConnectionState.Open)
+            {
+                m_Connection.ConnectionString = "DRIVER={MySQL ODBC 3.51 Driver};Server = " + m_strIP + ";database=" + m_strDb + ";User ID=" + m_strId + ";Pwd=" + m_strPw + ";";
+                try
+                {
+                    m_Connection.Open();
+                    if (m_Connection.State == ConnectionState.Open)
+                    {
+                        return 1;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+            else
+            {
+                return 0;
+            }
+		}
+
+		public int MySqlCon(string strDbIp, string strDbName, string strDbId, string strDbPw)
+        {
+            try
+            {
+                m_myCon = new MySqlConnection();
+                m_myCon.ConnectionString = "Data Source=" + strDbIp + ";Database=" + strDbName + ";User Id=" + strDbId + ";Password=" + strDbPw + ";CHARSET=euckr";
+                m_myCon.Open();
+
+                //m_myCon1 = new MySqlConnection();
+                //m_myCon1.ConnectionString = "Data Source=" + strDbIp + ";Database=" + strDbName + ";User Id=" + strDbId + ";Password=" + strDbPw + ";CHARSET=euckr";
+                //m_myCon1.Open();
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("MySqlCon() 예외 발생: " + ex.Message.ToString());
+            }
+        }
+
+		public void Disconnection()
+		{
+            if (m_Connection.State == ConnectionState.Open)
+            {
+                try
+                {
+                    m_Connection.Close();
+                }
+                catch
+                {
+                    MessageBox.Show("접속 해제 실패");
+                }
+            }
+		}
+
+		//Select 구문 실행
+		public OdbcDataReader ExcuteQuery(string a_strQuery)
+		{
+            try
+            {
+                m_Command = new OdbcCommand(a_strQuery, m_Connection);
+                m_DataReader = m_Command.ExecuteReader();
+            }
+            catch
+            {
+                MessageBox.Show("Query 에러 : "+a_strQuery);
+            }
+            return m_DataReader;
+		}
+
+		//Update, Insert, Delete 구문 실행
+		public void ExcuteNonQuery(string a_strQuery)
+		{
+            try
+            {
+                m_Command = new OdbcCommand(a_strQuery, m_Connection);
+                m_Command.ExecuteNonQuery();
+            }
+            catch
+            {
+                MessageBox.Show("Query 에러 : "+a_strQuery);
+            }
+		}
+
+        //RecordCount
+        public int RecordCount(string a_strQuery)
+        {
+            int RecordCount = 0;
+            try
+            {
+                m_Command = new OdbcCommand(a_strQuery, m_Connection);
+                m_DataReader = m_Command.ExecuteReader();
+
+                while (m_DataReader.Read())
+                {
+                    RecordCount++;
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Query 에러 : "+a_strQuery);
+            }
+            return RecordCount;
+        }
+
+        //Column의 유무 검색
+        public bool HasColumn(string a_strTblName, string a_strColumn)
+        {
+            a_strTblName = "Select * From " + a_strTblName + ";";
+
+            m_Command = new OdbcCommand(a_strTblName, m_Connection);
+            m_DataReader = m_Command.ExecuteReader();
+
+            while (m_DataReader.Read())
+            {
+                for (int i = 0; i < m_DataReader.FieldCount; i++)
+                {
+                    if (m_DataReader.GetName(i).Equals(a_strColumn))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        #region IDisposable 멤버
+
+        public void Dispose()
+        {
+            //throw new NotImplementedException();
+            m_Connection.Close();
+        }
+
+        #endregion
+    }
+}

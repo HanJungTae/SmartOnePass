@@ -1,0 +1,403 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btn_close_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_close_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnAdd_Click_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnAdd_Click_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Btn_Lobby_Pink_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Btn_Lobby_Pink_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_start_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_start_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Btn_Lobby_Click_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Btn_Lobby_Click_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow4" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\label_arrow4.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="combo_arrow_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\combo_arrow_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_send_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_send_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="check_bg" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\check_bg.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnBle_Over_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnBle_Over_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ckb_check" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\ckb_check.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_key_del_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_key_del_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Btn_Dong_Click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Btn_Dong_Click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="combo_bg" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\combo_bg.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnDel_Click_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnDel_Click_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnTag_Normal_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnTag_Normal_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OUC_List_Bg3" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\OUC_List_Bg3.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_send_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_send_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="radio_btn_normal1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\radio_btn_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Btn_Dong_Normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Btn_Dong_Normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_all_reset_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_all_reset_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow21" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\Icon\label_arrow2.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="combo_arrow_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\combo_arrow_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="radio_btn_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\radio_btn_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="radio_btn_click1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\radio_btn_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="combo_arrow_click1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\combo_arrow_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Btn_Lobby_Normal_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Btn_Lobby_Normal_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow3" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\label_arrow3.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Label_2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resource\label_2.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_search_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_search_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\label_arrow3.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnDel_Over_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnDel_Over_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Editsearch_Normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Editsearch_Normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Btn_Dong_Over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Btn_Dong_Over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_el_call_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_el_call_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_reset_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_reset_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnRegister_Over_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnRegister_Over_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_setting_save_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_setting_save_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_search_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_search_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Btn_Lobby_Over_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Btn_Lobby_Over_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\label_arrow.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow22" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\label_arrow2.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\label_arrow2.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_el_call_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_el_call_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_el_call_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_el_call_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OUC_List_Bg" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\OUC_List_Bg.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnBle_Click_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnBle_Click_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_setting_save_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_setting_save_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_key_del_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_key_del_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_all_reset_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_all_reset_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnTag_Over_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnTag_Over_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_stop_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_stop_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_start_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_start_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="combo_arrow_over1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\combo_arrow_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow31" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\Icon\label_arrow3.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Editsearch_Click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Editsearch_Click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_key_del_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_key_del_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Btn_Lobby_Not_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Btn_Lobby_Not_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="combo_bg1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\combo_bg.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnAdd_Normal_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnAdd_Normal_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="KgRegstor_Bg" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\KgRegstor_Bg.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_search_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_search_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnRegister_Normal_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnRegister_Normal_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="combo_arrow_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\combo_arrow_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_setting_save_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_setting_save_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_start_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_start_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow5" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\label_arrow.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow42" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\label_arrow4.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnAdd_Over_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnAdd_Over_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_stop_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_stop_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnBle_noraml_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnBle_noraml_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_all_reset_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_all_reset_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_send_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_send_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_reset_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_reset_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="combo_arrow_normal1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\combo_arrow_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ckb_none" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\ckb_none.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_close_over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_close_over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_reset_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_reset_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_close_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_close_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Editsearch_Over" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Editsearch_Over.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnTag_Click_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnTag_Click_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnRegister_Click_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnRegister_Click_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Btn_Lobby_Blue_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Btn_Lobby_Blue_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\Icon\label_arrow.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Dong_Title_Bg" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\Dong_Title_Bg.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="List_Bg" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\List_Bg.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="btn_stop_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\btn_stop_click.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="radio_btn_normal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\FormImg\radio_btn_normal.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OUC_List_Bg2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\OUC_List_Bg2.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnDel_Normal_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnDel_Normal_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="label_arrow41" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\bin\x86\Release\Image\Icon\label_arrow4.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnBasic_Click_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnBasic_Click_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnBasic_Normal_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnBasic_Normal_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BtnBasic_Over_xxx" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resource\BtnBasic_Over_xxx.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+</root>

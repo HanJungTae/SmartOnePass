@@ -1,0 +1,2982 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Net.Sockets;
+using System.Threading;
+using System.IO;
+using System.Runtime.InteropServices;
+using OnePass.CRT;
+
+namespace OnePass
+{
+    public struct stLobbyId
+    {
+        public string strUkrGid;
+        public string strUkrDid;
+        public string strLobbyName;
+    }
+
+    public struct stKeyDirection
+    {
+        public byte byUkrGid;
+        public byte byUkrDid;
+        public byte byElGid;
+        public byte byElDid;
+        public bool bUkrConfirm;
+        public bool bElConfirm;
+        public string strKeyId;
+    }
+
+    public struct stCrtCall
+    {
+        public byte byUkrGid;
+        public byte byUkrDid;
+        public byte byElGid;
+        public byte byElDid;
+        public string strCarId;
+        public int nTakeOn;
+        public int[] nArTakeOff;
+        public int nTakeOff;
+        public int nDelayTime;
+        public int nKeyCnt;
+        public string strKeyId;
+        public string[] strArKeyId;
+        public bool bUkrConfirmFlag;    // UKR 인증 Flag
+        public bool bElConfirmFlag;     // 엘리베이터 리더기 인증 Flag (두개의 Flag를 이용하여 방향성 체크)
+        // bUkrConfirmFlag가 셋팅이 되고, bElConfirmFlag가 셋팅되어야 방향성이 맞게(외부에서 내부) 되었음.
+        // bElConfirmFlag가 셋팅이 되고, bUkrConfirmFlag가 셋팅이 되면 방향성이 안맞음(내부에서 외부)
+        public bool bElCallFlag;    // 엘리베니터 호출 Flag => True가 될때 엘리베이터 호출을 함.
+    }
+
+    public struct stCrtCallInfo
+    {
+        public string strLBName;
+        public byte byUkrGid;
+        public byte byUkrDid;
+        public byte byElGid;
+        public byte byElDid;
+        public string strCrtId;
+        public int nDelayTime;
+        public string strTakeOn;
+        public string strCarConfig;
+        public bool bElUse; // 엘리베이터 리더기 사용여부(방향성 체크 여부) True ==> 엘리베이터 리더기를 이용하여 방샹성을 체크
+        //                                              False ==> 엘리베이터 리더기를 사용하지 않고, 로비에서 엘리베이터 바로 호출
+        public List<string> KeyId;      // 인증된 키정보
+    }
+
+    public struct stStateInfo
+    {
+        public byte byGid;
+        public byte byDid;
+        public int nStateCnt;
+    }
+
+    public struct stKeyInfo
+    {
+        public string strDong;
+        public string strHo;
+        public string strKeySn;
+        public string strKeyId;
+    }
+
+    public partial class FormMain : Form
+    {
+        ////////////////////////////////////////////////////////
+        // 테이블 생성 변수
+        public const string LOBBY_CRT_INFO_TBL_NAME = "Lobby_Crt_Info";
+        public const string LOBBY_CRT_INFO_TBL_CREATE = "CREATE TABLE  `kms`.`Lobby_Crt_Info` ( `Index` int(10) unsigned NOT NULL AUTO_INCREMENT, `Lobby_Name` varchar(16) CHARACTER SET latin1 DEFAULT NULL, `UKR_GID` varchar(4) DEFAULT NULL, `UKR_DID` varchar(4) DEFAULT '0', `UKR_EL_GID` varchar(4) DEFAULT NULL, `UKR_EL_DID` varchar(4) DEFAULT NULL, `EL_ID` varchar(16) DEFAULT NULL, `Delay_Time` float DEFAULT NULL, `Take_On` varchar(4) DEFAULT NULL, `EL_USE` int(10) unsigned DEFAULT NULL, `Car_Config` varchar(128) DEFAULT NULL, PRIMARY KEY (`Index`)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=euckr;";
+
+        private const string CREATE_RESET_TBL = "CREATE TABLE  `kms`.`Lobby_Reset` (`Num` INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT,`LobbyName` VARCHAR(64),`Flag` INTEGER UNSIGNED,PRIMARY KEY (`Num`) ) ENGINE = InnoDB CHARACTER SET euckr COLLATE euckr_korean_ci;";
+
+        private string m_strDBIp = "";
+        private string m_strDBName = "";
+        private string m_strDBId = "";
+        private string m_strDBPw = "";
+
+        private string  m_strCrtIp = "";
+        private int     m_nCrtPort = 0;
+
+        private int     m_nCrtSubUse = 0;
+        private string  m_strCrtSubIp = "";
+        private int     m_nCrtSubPort = 0;
+        private int     m_nCrtSubCaStart = 0;
+
+        private int     m_nCarCount = 0;
+
+        private string m_strDirectionFlag = "";  // 방향성 설정
+        // Value= 0이면 방향성이 없음, 
+        // Value= 1이면 방향성이 있음(즉엘리베이터 앞에 리더기가 있음), 
+        private string m_strTakeOffFlag = "";    // 목적층 설정
+        // Value가 0이면 목적층이 없음, 1이면 목적층이 있음   
+
+        private UC_Map[] m_ucMap;
+
+        private List<int> m_listDong = new List<int>();
+
+        private Networkcs m_server = null;
+
+        private List<DevInfo> m_listUkrInfo = new List<DevInfo>();
+        private List<stStateInfo> m_listStateInfo = new List<stStateInfo>();
+        private byte m_bySeq = 0x00;
+        private List<stLobbyId> m_listLobbyId = new List<stLobbyId>();
+
+        ///////////////////////////////////////////////////////////////
+        // 엘리베이터 Call 멤버 변수
+        private List<stCrtCallInfo>     m_listCrtCallInfo       = new List<stCrtCallInfo>();
+        private List<stCrtCall>         m_listCrtCall           = new List<stCrtCall>();
+        private List<stKeyDirection>    m_listKeyDirection      = new List<stKeyDirection>();
+        private CRTBase                 m_hCrt;
+        private CRTBase                 m_hCrtSub;
+        private string                  m_CrtType;
+
+        private bool                    m_useTakeoff;
+		private string                   m_CrtType;	
+        private Log m_logCrt = new Log("LogCrt");
+        private Log m_logMainList = new Log("Log");
+        ///////////////////////////////////////////////////////////////
+
+        ///////////////////////////////////////////////////////////////
+        // 듀얼 아이 카드 리더기 연동
+        private DualiControl m_dualI = new DualiControl();
+
+        ///////////////////////////////////////////////////////////////
+        // Mysql 연동
+        private MySqlDB m_mysql = new MySqlDB();
+
+        // 리셋 타이머
+        private ResetTimer _resetTimer;
+
+        // 윈도우 메시지 관련 변수
+        public const int WM_REQALIVE = 0x0400 + 5000;
+        public const int WM_RESSERVER = 0x0400 + 5001;
+        public const int WM_RESCLIENT = 0x0400 + 5002;
+
+        // 등록기
+        private DevInfo _register;
+       // private int _appType;
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr FindWindow(string strClassName, string strWindowName);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr SendMessage(int hWnd, uint Msg, uint wParam, uint lParam);
+
+        private void SendMsgAPI(string a_strProcess, uint a_nMsg)
+        {
+            int hWnd = 0;
+            hWnd = (int)FindWindow(null, a_strProcess);
+
+            if (hWnd > 0)
+            {
+                SendMessage(hWnd, a_nMsg, 0, 0);
+            }
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+            if (m.Msg == WM_REQALIVE)
+            {
+                SendMsgAPI("ONEPASS MANAGER", WM_RESCLIENT);
+            }
+        }
+
+        // 멤버 변수 속성 처리
+        public String DBIp
+        {
+            get { return m_strDBIp; }
+            set { m_strDBIp = value; }
+        }
+
+        public String DBName
+        {
+            get { return m_strDBName; }
+            set { m_strDBName = value; }
+        }
+
+        public String DBId
+        {
+            get { return m_strDBId; }
+            set { m_strDBId = value; }
+        }
+
+        public String DBPw
+        {
+            get { return m_strDBPw; }
+            set { m_strDBPw = value; }
+        }
+        ///////////////////////////////////////////////////////////////
+
+        public FormMain()
+        {
+            InitializeComponent();
+        }
+
+        private void FormMain_Load(object sender, EventArgs e)
+        {
+            // 파일에서 DB 정보 읽기
+            LoadConfig();
+
+            this.DBName = "kms";
+            this.DBId = "upisadm";
+            this.DBPw = "upis";
+
+            ///////////////////////////////////////////////////////////////
+            // 화면 해상도에 맞게 변경
+            this.Size = Screen.PrimaryScreen.WorkingArea.Size;
+            this.Location = new Point(0, 0);
+
+            m_mysql.MySqlCon(this.DBIp, this.DBName, this.DBId, this.DBPw);
+
+            // CRT 접속
+            CrtConnection();
+
+            //////////////////////////////////////////////////////////
+            // 기본 Table 생성
+            TblCreate();
+
+            //////////////////////////////////////////////////////////
+            // Table 초기화
+            TblInit();
+
+            ////////////////////////////////////////////////////////
+            // 동 정보 읽기를 읽어 Tree 생성
+            LoadDongInfo();
+            CreateTreeView();
+            CreateLobbyInfo();
+
+            /////////////////////////////////////////////////////////
+            // 로비 이름과 ID 읽기
+            LoadLobbyId();
+            ///////////////////////////////////////////////////////
+
+            ////////////////////////////////////////////////////////
+            //Delegate 함수 설정(엘레베이터 호출 테스트를 하기 위함)
+            Program.g_fnKeyConfirm += KeyConfirm;
+
+            ////////////////////////////////////////////////////////
+            // 서버 Start
+            m_server = new Networkcs();
+            m_server.Port = 31100;
+            //m_server.Port = 43210;
+            m_server.ServerStart();
+            m_server.EvtDevDataRecv += new Networkcs.MyEventHandlerDevDataRecv(p_DevDataRecv);
+        
+            // 리셋 타이머
+            _resetTimer = new ResetTimer(this);
+
+            // 타이머 설정
+            _resetTimer.SetTimer(ref m_listUkrInfo);
+
+            // 등록기
+            _register = null;
+
+            
+        }
+
+        public void CrtConnection()
+        {
+            // E/V 정보 읽기
+            LoadCrtInfo();
+
+            //////////////////////////////////////////////////////
+            // Crt 서버 접속
+            switch (m_CrtType.ToLower())
+            {
+                case "ots":
+                    {
+                        m_hCrt = new Crt_OTS();
+                        break;
+                    }
+                case "hyundai":
+                    {
+                        m_hCrt = new Crt_Hyundai();
+                        // CRT 서버가 두 대 인경우
+                        if (m_nCrtSubUse == 1)
+                            m_hCrtSub = new Crt_Hyundai();
+                        break;
+                    }
+                case "thyssen":
+                    {
+                        m_hCrt = new Crt_ThyssenKrupp();
+                        // 상태 체크 하기 위한 설정
+                        m_hCrt.SetCarCount(m_nCarCount, m_strTakeOffFlag);
+                        break;
+                    }
+                case "power":
+                    {
+                        m_hCrt = new Crt_Power();
+                        break;
+                    }
+                case "han":
+                    {
+                        m_hCrt = new Crt_Mitsubishi();
+                        break;
+                    }
+            }
+
+            m_hCrt.SetLogCallback(LogSave);
+
+            if (m_hCrt.CrtConnection(m_strCrtIp, m_nCrtPort))
+                this.LogPrint(string.Format("{0} 엘리베이터 서버 접속 성공 / {1} : {2}", m_CrtType, m_strCrtIp , m_nCrtPort));
+            else
+                this.LogPrint(string.Format("{0} 엘리베이터 서버 접속 실패 / {1} : {2} ", m_CrtType, m_strCrtIp, m_nCrtPort));
+
+            if (m_nCrtSubUse == 1)
+            {
+                m_hCrtSub.SetLogCallback(LogSave);
+
+                if (m_hCrtSub.CrtConnection(m_strCrtSubIp, m_nCrtSubPort))
+                    this.LogPrint(string.Format("{0} 엘리베이터 서브 서버 접속 성공 / {1} : {2} / CAR START : {3}", m_CrtType, m_strCrtSubIp, m_nCrtSubPort, m_nCrtSubCaStart));
+                else
+                    this.LogPrint(string.Format("{0} 엘리베이터 서브 서버 접속 실패 / {1} : {2}  / CAR START : {3}", m_CrtType, m_strCrtSubIp, m_nCrtSubPort, m_nCrtSubCaStart));
+            }
+
+            LogPrint("엘리베이터 재 접속 확인 간격 : 10분");
+        }
+
+        
+
+        public void CrtReconnection()
+        {
+            if (m_hCrt.IsCrtConnected() == true) // 현재 엘리베이터 서버에 접속해 있으면 재접속을 하지 않음.
+            {
+                return; 
+            }
+
+            if (m_hCrt.CrtConnection() == true)
+            {
+
+                if (m_nCrtSubUse == 1)
+                {
+                    if (m_hCrtSub.IsCrtConnected() == true) // 현재 엘리베이터 서버에 접속해 있으면 재접속을 하지 않음.
+                    {
+                        return;
+                    }
+
+                    if(m_hCrtSub.CrtConnection() != true)
+                    {
+                        LogPrint(string.Format("{0} 엘리베이터 서버(Sub) 재 접속 실패", m_CrtType));
+                        return;
+                    }
+                }
+
+                LogSave(string.Format("{0} 엘리베이터 서버 재 접속 성공", m_CrtType));
+                LogPrint(string.Format("{0} 엘리베이터 서버 재 접속 성공", m_CrtType));
+            }
+            else
+            {
+                LogPrint(string.Format("{0} 엘리베이터 서버 재 접속 실패", m_CrtType));
+            }
+        }
+
+        // 기본 테이블 생성
+        private void TblCreate()
+        {
+            /////////////////////////////////////////////////////////
+            // Lobby_Crt_Info 테이블 생성
+            if (!IsTable(LOBBY_CRT_INFO_TBL_NAME))
+                CreateTable(LOBBY_CRT_INFO_TBL_CREATE);
+
+            if (!IsTable(CREATE_RESET_TBL))
+            {
+                CreateTable(CREATE_RESET_TBL);
+
+                string _strQry = string.Format("SELECT LobbyName FROM Lobby_Info;");
+
+                List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+                for (int i = 0; i < _qryList.Count; i++)
+                {
+                    _strQry = string.Format("INSERT INTO Lobby_Reset(LobbyName, Flag)  VALUES('{0}', 0);", _qryList[i]);
+                    m_mysql.MySqlExec(_strQry);
+                }
+            }
+        }
+
+        // 기본 테이블 생성
+        private void TblInit()
+        {
+            /////////////////////////////////////////////////////////
+            // Lobby_Crt_Info 테이블 생성
+            string _strQry = string.Format("Update Lobby_Info Set LobbyIp = '', Ping_State = 0, CR_State = 0 ;");
+            m_mysql.MySqlExec(_strQry);
+
+            _strQry = string.Format("UPDATE Lobby_Reset SET Flag = 0;");
+            m_mysql.MySqlExec(_strQry);
+        }
+
+        // 테이블 존재 판단
+        private bool IsTable(string a_strTblName)
+        {
+            string _strQry = string.Format("show tables where Tables_in_kms = '{0}';", a_strTblName);
+            string _strLobbyName = "";
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strLobbyName = _str[0];
+            }
+
+            if (_strLobbyName != "")
+                return true;
+            else
+                return false;
+        }
+        // 테이블 생성
+        private void CreateTable(string a_strQry)
+        {
+            try
+            {
+                m_mysql.MySqlExec(a_strQry);
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("CreateTable() 메소드 예외: " + ex.Message.ToString(), System.Drawing.Color.Red);
+                Console.WriteLine("strQry = " + a_strQry, System.Drawing.Color.Red);
+            }
+        }
+
+
+        public int GetStringToInt(string a_str)
+        {
+            string _strFirst = "", _strSecond = "";
+            int _nRet = 0;
+
+            _strFirst = a_str.Substring(0, 1);
+            _strSecond = a_str.Substring(1, 1);
+
+            _strFirst = _strFirst.ToUpper();
+            _strSecond = _strSecond.ToUpper();
+
+            switch (_strFirst)
+            {
+                case "A":
+                    _nRet = 16 * 10;
+                    break;
+                case "B":
+                    _nRet = 16 * 11;
+                    break;
+                case "C":
+                    _nRet = 16 * 12;
+                    break;
+                case "D":
+                    _nRet = 16 * 13;
+                    break;
+                case "E":
+                    _nRet = 16 * 14;
+                    break;
+                case "F":
+                    _nRet = 16 * 15;
+                    break;
+                case "0":
+                case "1":
+                case "2":
+                case "3":
+                case "4":
+                case "5":
+                case "6":
+                case "7":
+                case "8":
+                case "9":
+                    _nRet = 16 * int.Parse(_strFirst);
+                    break;
+                default:
+                    break;
+
+            }
+
+            switch (_strSecond)
+            {
+                case "A":
+                    _nRet = _nRet + 10;
+                    break;
+                case "B":
+                    _nRet = _nRet + 11;
+                    break;
+                case "C":
+                    _nRet = _nRet + 12;
+                    break;
+                case "D":
+                    _nRet = _nRet + 13;
+                    break;
+                case "E":
+                    _nRet = _nRet + 14;
+                    break;
+                case "F":
+                    _nRet = _nRet + 15;
+                    break;
+                case "0":
+                case "1":
+                case "2":
+                case "3":
+                case "4":
+                case "5":
+                case "6":
+                case "7":
+                case "8":
+                case "9":
+                    _nRet = _nRet + int.Parse(_strSecond);
+                    break;
+                default:
+                    break;
+            }
+
+            return _nRet;
+        }
+
+        private void LoadLobbyId()
+        {
+            string _strQry = string.Format("select Lobby_GID, Lobby_DID, Lobby_Name  from Lobby_ID order by Lobby_GID asc;");
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 3);
+
+            foreach (string[] _str in _qryList)
+            {
+                stLobbyId _st = new stLobbyId();
+
+                _st.strUkrGid = _str[0];
+                _st.strUkrDid = _str[1];
+                _st.strLobbyName = _str[2];
+
+                m_listLobbyId.Add(_st);
+            }
+        }
+
+        private string GetLobbyName(string a_strUkrGid, string a_strUkrDid)
+        {
+            string _strLobbyName = "";
+
+            foreach (stLobbyId _st in m_listLobbyId)
+            {
+                if ((a_strUkrGid == _st.strUkrGid) &&
+                    (a_strUkrDid == _st.strUkrDid))
+                {
+                    return _st.strLobbyName;
+                }
+            }
+
+            return _strLobbyName;
+        }
+
+        private void LoadDongInfo()
+        {
+            string _strQry = "SELECT Dong FROM kms.Dong_Lobby group by Dong;";
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+            foreach (string[] _str in _qryList)
+            {
+                int _nDong = int.Parse(string.Format("{0}", _str[0]));
+                m_listDong.Add(_nDong);
+            }
+        }
+
+        private void CreateTreeView()
+        {
+            // 동정보로 Tree Icon 만들기
+            TreeNode _trNode = new TreeNode("단지 동정보", 0, 0);
+            foreach (int _i in m_listDong)
+            {
+                _trNode.Nodes.Add(_i.ToString(), _i.ToString());
+            }
+
+            tv_dong.Nodes.Add(_trNode);
+            tv_dong.ExpandAll();
+        }
+
+        private void CreateLobbyInfo()
+        {
+            m_ucMap = new UC_Map[m_listDong.Count];
+
+            int nLoopCnt = 0;
+            foreach (int _nDongName in m_listDong)
+            {
+                m_ucMap[nLoopCnt] = new UC_Map();
+                m_ucMap[nLoopCnt].Parent = splitContainer2.Panel1;
+
+                m_ucMap[nLoopCnt].Dock = DockStyle.Fill;
+
+                List<string> _listLBName = GatewayView(_nDongName);
+                m_ucMap[nLoopCnt].CreateLobbyName(_listLBName);
+                m_ucMap[nLoopCnt].lobbyBtnClick += new UC_Map.LobbyBtnClick(BtnLobbyClick);
+
+                if (nLoopCnt != 0)
+                    m_ucMap[nLoopCnt].Hide();
+
+                nLoopCnt++;
+            }
+        }
+
+        private void LoadCrtInfo()
+        {
+            string _strQry = "SELECT Lobby_Name, UKR_GID, UKR_DID, UKR_EL_GID, UKR_EL_DID, EL_ID, Delay_Time, Take_On, EL_USE, Car_Config FROM Lobby_Crt_Info;";
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 10);
+
+            m_listCrtCallInfo.Clear();
+
+            foreach (string[] _str in _qryList)
+            {
+                stCrtCallInfo _stCrt = new stCrtCallInfo();
+
+                _stCrt.strLBName = _str[0];
+                _stCrt.byUkrGid = Convert.ToByte(Convert.ToInt32(_str[1], 16));
+                _stCrt.byUkrDid = Convert.ToByte(Convert.ToInt32(_str[2], 16));
+                _stCrt.byElGid = Convert.ToByte(Convert.ToInt32(_str[3], 16));
+                _stCrt.byElDid = Convert.ToByte(Convert.ToInt32(_str[4], 16));
+                _stCrt.strCrtId = _str[5];
+                _stCrt.nDelayTime = (int)(float.Parse(_str[6]) * 1000);
+                _stCrt.strTakeOn = _str[7];
+                if (_str[8] == "1")
+                    _stCrt.bElUse = true;
+                else
+                    _stCrt.bElUse = false;
+                _stCrt.strCarConfig = _str[9];
+
+                _stCrt.KeyId = new List<string>();
+
+                m_listCrtCallInfo.Add(_stCrt);
+            }
+        }
+
+        private void tv_dong_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            string strNodeKey = e.Node.Name;
+
+            if (string.IsNullOrEmpty(strNodeKey))
+                return;
+
+            //Console.WriteLine("선택된 노드 키 : " + strNodeKey);
+
+            for (int i = 0; i < m_listDong.Count; i++)
+            {
+                if (m_listDong[i] == int.Parse(strNodeKey))
+                {
+                    m_ucMap[i].Show();
+                }
+                else
+                {
+                    m_ucMap[i].Hide();
+                }
+            }
+        }
+
+        private List<string> GatewayView(int a_nDongName)
+        {
+            string _strQry = string.Format("SELECT Lobby_Name FROM Dong_Lobby where Dong = {0} group by Lobby_Name;", a_nDongName);
+
+            List<string> _listLBName = new List<string>();
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+            foreach (string[] _str in _qryList)
+            {
+                _listLBName.Add(string.Format("{0}", _str[0]));
+            }
+
+            //foreach (string _str in _listLBName)
+            //{
+            //    Console.WriteLine("로비 이름 : " + _str);
+            //}
+
+            return _listLBName;
+        }
+
+        private List<string> GetLBName(string a_strDong, string a_strHo)
+        {
+            string _strQry = string.Format("Select Lobby_Name From Dong_Lobby where Dong = {0} and Ho = {1};", a_strDong, a_strHo);
+
+            List<string> _listLBName = new List<string>();
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+            foreach (string[] _str in _qryList)
+            {
+                _listLBName.Add(string.Format("{0}", _str[0]));
+            }
+
+            return _listLBName;
+        }
+
+        // 로비 버튼 클릭
+        //private Object thisLock = new Object();
+        private void BtnLobbyClick(string a_strLBName)
+        {
+            ///////////////////////////////////////
+            // 로비 정보를 클릭하면, 로비 정보, Reg, Del, Key_Info_Master 
+            // 정보를 변경함.
+            this.BtnEnable(false);
+            //lock (thisLock)
+            {
+
+                LVLobbyInfo(a_strLBName);
+                LVRegTblView(a_strLBName);
+                LVDelTblView(a_strLBName);
+                LVMasterTblView(a_strLBName);
+            }
+            this.BtnEnable(true);
+        }
+
+        private void BtnEnable(bool a_nFlag)
+        {
+            for (int i = 0; i < m_listDong.Count; i++)
+            {
+                m_ucMap[i].BtnEnable(a_nFlag);
+            }
+        }
+
+        private void LVLobbyInfo(string a_strLBName)
+        {
+            string _strQry = string.Format("SELECT LobbyIp, LobbyPort, Reg_Tbl, Del_Tbl FROM Lobby_Info where LobbyName = '{0}';", a_strLBName);
+
+            string _strLBId = "", _strLBIp = "", _strLBPort = "", _strLBReg = "", _strLBDel = "";
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 4);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strLBIp = _str[0];
+                _strLBPort = _str[1];
+                _strLBReg = _str[2];
+                _strLBDel = _str[3];
+            }
+
+            _strQry = string.Format("Select Lobby_Gid From Lobby_ID where Lobby_Name = '{0}';", a_strLBName);
+            _qryList.Clear();
+            _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strLBId = _str[0];
+            }
+
+
+            lv_lb_info.Items.Clear();
+
+            ListViewItem _lvi1 = new ListViewItem("로비 ID");
+
+            if (_strLBId == "")
+                return;
+
+            _lvi1.SubItems.Add(Convert.ToInt32(_strLBId, 16).ToString());
+
+            ListViewItem _lvi2 = new ListViewItem("로비 IP");
+            _lvi2.SubItems.Add(_strLBIp);
+
+            ListViewItem _lvi3 = new ListViewItem("로비 Port");
+            _lvi3.SubItems.Add(_strLBPort);
+
+            ListViewItem _lvi4 = new ListViewItem("Reg Table");
+            _lvi4.SubItems.Add(_strLBReg);
+
+            ListViewItem _lvi5 = new ListViewItem("Del Table");
+            _lvi5.SubItems.Add(_strLBDel);
+
+            lv_lb_info.InvokeIfNeeded(() => lv_lb_info.Items.Add(_lvi1));
+            lv_lb_info.InvokeIfNeeded(() => lv_lb_info.Items.Add(_lvi2));
+            lv_lb_info.InvokeIfNeeded(() => lv_lb_info.Items.Add(_lvi3));
+            lv_lb_info.InvokeIfNeeded(() => lv_lb_info.Items.Add(_lvi4));
+            lv_lb_info.InvokeIfNeeded(() => lv_lb_info.Items.Add(_lvi5));
+
+        }
+
+        private void LVRegTblView(string a_strLBName)
+        {
+            string _strQry = string.Format("SELECT Dong, Ho, Key_Sn, Key_Id FROM Reg_{0};", a_strLBName);
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 4);
+
+            string _strDong = "", _strHo = "", _strKeySn = "", _strKeyId = "";
+
+            lv_lb_reg.InvokeIfNeeded(() => lv_lb_reg.Items.Clear());
+            foreach (string[] _str in _qryList)
+            {
+                _strDong = _str[0];
+                _strHo = _str[1];
+                _strKeySn = _str[2];
+                _strKeyId = _str[3];
+
+                ListViewItem _lvi = new ListViewItem("");
+                _lvi.SubItems.Add(_strDong);
+                _lvi.SubItems.Add(_strHo);
+                _lvi.SubItems.Add(_strKeySn);
+                _lvi.SubItems.Add(_strKeyId);
+
+                lv_lb_reg.InvokeIfNeeded(() => lv_lb_reg.Items.Add(_lvi));
+            }
+        }
+
+        private void LVDelTblView(string a_strLBName)
+        {
+            string _strQry = string.Format("SELECT Dong, Ho, Key_Sn, Key_Id FROM Del_{0};", a_strLBName);
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 4);
+
+            string _strDong = "", _strHo = "", _strKeySn = "", _strKeyId = "";
+
+            lv_lb_del.InvokeIfNeeded(() => lv_lb_del.Items.Clear());
+            foreach (string[] _str in _qryList)
+            {
+                _strDong = _str[0];
+                _strHo = _str[1];
+                _strKeySn = _str[2];
+                _strKeyId = _str[3];
+
+                ListViewItem _lvi = new ListViewItem("");
+                _lvi.SubItems.Add(_strDong);
+                _lvi.SubItems.Add(_strHo);
+                _lvi.SubItems.Add(_strKeySn);
+                _lvi.SubItems.Add(_strKeyId);
+
+                lv_lb_del.InvokeIfNeeded(() => lv_lb_del.Items.Add(_lvi));
+            }
+        }
+
+        private void LVMasterTblView(string a_strLBName)
+        {
+            string _strQry = string.Format("select K.Dong, K.Ho, K.Key_Sn, K.Key_Id From Key_Info_Master AS K INNER JOIN Dong_Lobby AS D ON K.Dong = D.Dong and K.Ho = D.Ho and D.Lobby_Name = '{0}' ;", a_strLBName);
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 4);
+
+            string _strDong = "", _strHo = "", _strKeySn = "", _strKeyId = "";
+
+            lv_lb_master.InvokeIfNeeded(() => lv_lb_master.Items.Clear());
+            foreach (string[] _str in _qryList)
+            {
+                _strDong = _str[0];
+                _strHo = _str[1];
+                _strKeySn = _str[2];
+                _strKeyId = _str[3];
+
+                ListViewItem _lvi = new ListViewItem("");
+                _lvi.SubItems.Add(_strDong);
+                _lvi.SubItems.Add(_strHo);
+                _lvi.SubItems.Add(_strKeySn);
+                _lvi.SubItems.Add(_strKeyId);
+
+                lv_lb_master.InvokeIfNeeded(() => lv_lb_master.Items.Add(_lvi));
+            }
+        }
+
+        private void menu_sync_setting_Click(object sender, EventArgs e)
+        {
+            FormPassword frmPw = new FormPassword();
+            frmPw.ShowDialog();
+
+            if (Program.g_bpassword == true)
+            {
+                Program.g_bpassword = false;
+
+                FormSyncInfo _frmSync = new FormSyncInfo();
+                _frmSync.SetMySql(m_mysql);
+                _frmSync.ShowDialog();
+            }
+        }
+
+        private void menu_regdel_log_Click(object sender, EventArgs e)
+        {
+            FormRegDelLog _frmLog = new FormRegDelLog();
+            _frmLog.SetMySql(m_mysql);
+            _frmLog.ShowDialog();
+        }
+
+        private void menu_Test_Crt_Click(object sender, EventArgs e)
+        {
+            FormCrtCall _frmTestCrt = new FormCrtCall();
+            _frmTestCrt.Owner = this;
+            _frmTestCrt.SetMySql(m_mysql);
+            _frmTestCrt.ShowDialog();
+        }
+
+        private void btn_keyid_load_Click(object sender, EventArgs e)
+        {
+            m_dualI.ReadCard();
+
+            txt_reg_keysn.Text = m_dualI.StrCardSn;
+            txt_reg_keyid.Text = m_dualI.StrCardId;
+        }
+// 스마트 폰을 등록 하는 부분
+        // 등록기 GID = FF로 고정
+        private void btn_keyid_load_Click(object sender, EventArgs e)
+        {
+            if (_register == null)
+            {
+                MessageBox.Show("접속 된 등록기가 없습니다. 등록기 접속상태 확인 필요");
+                return;
+            }
+
+            byte[] _byPacket = MakeProtocol(_register.byGid, _register.byDid, "", 0x08, 0x01);
+
+            // 패킷을 생성 하지 못 한 경우
+            if (_byPacket == null)
+                return;
+
+            // 패킷을 보내지 못한 경우
+            if (_register.socket.Send(_byPacket) <= 0)
+                return;
+
+            this.LogPrint("식별번호 및 인증번호 요청");
+        }
+        private void btn_keyId_list_reg_Click(object sender, EventArgs e)
+        {
+            string _strDong = "", _strHo = "", _strKeySn = "", _strKeyId = "";
+
+            txt_reg_dong.InvokeIfNeeded(() => _strDong = txt_reg_dong.Text);
+            txt_reg_ho.InvokeIfNeeded(() => _strHo = txt_reg_ho.Text);
+            txt_reg_keysn.InvokeIfNeeded(() => _strKeySn = txt_reg_keysn.Text);
+            txt_reg_keyid.InvokeIfNeeded(() => _strKeyId = txt_reg_keyid.Text);
+
+            /////////////////////////////////////////////
+            // List에 같은 키 정보가 있는지 확인
+            string _strDongComp = "", _strHoComp = "", _strKeySnComp = "", _strKeyIdComp = "";
+
+            for (int i = 0; i < lv_key_info.Items.Count; i++)
+            {
+                lv_key_info.InvokeIfNeeded(() => _strDongComp   = lv_key_info.Items[i].SubItems[1].Text);
+                lv_key_info.InvokeIfNeeded(() => _strHoComp     = lv_key_info.Items[i].SubItems[2].Text);
+                lv_key_info.InvokeIfNeeded(() => _strKeySnComp  = lv_key_info.Items[i].SubItems[3].Text);
+                lv_key_info.InvokeIfNeeded(() => _strKeyIdComp  = lv_key_info.Items[i].SubItems[4].Text);
+
+                _strKeyIdComp = _strKeyIdComp.ToLower();
+                _strKeyId = _strKeyId.ToLower();
+
+                if ((_strDong == _strDongComp) &&
+                    (_strHo == _strHoComp) &&
+                    (_strKeySn == _strKeySnComp) &&
+                    (_strKeyId == _strKeyIdComp))
+                {
+                    MessageBox.Show("똑같은 키 정보가 있습니다.");
+                    return;
+                }
+            }
+
+            ListViewItem _lvi = new ListViewItem("");
+            _lvi.SubItems.Add(_strDong);
+            _lvi.SubItems.Add(_strHo);
+            _lvi.SubItems.Add(_strKeySn);
+            _lvi.SubItems.Add(_strKeyId);
+
+            lv_key_info.InvokeIfNeeded(() => lv_key_info.Items.Add(_lvi));
+        }
+
+        private void menu_reg_key_all_Click(object sender, EventArgs e)
+        {
+            FormRegKeyAll _frmRegAll = new FormRegKeyAll();
+            _frmRegAll.ShowDialog();
+        }
+
+        ////////////////////////////////////////////////////////////
+        // 키 등록 리스트 우클릭
+        private void lv_key_info_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button.Equals(MouseButtons.Right))
+            {
+                ListViewItem _lvi = new ListViewItem();
+                int nSelIdx = 0;
+                lv_key_info.InvokeIfNeeded(() => nSelIdx = lv_key_info.FocusedItem.Index);
+                lv_key_info.InvokeIfNeeded(() => _lvi = lv_key_info.Items[nSelIdx]);
+
+                if (MessageBox.Show("Key Data를 삭제 하시겠습니까?", "삭제 확인", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    lv_key_info.InvokeIfNeeded(() => lv_key_info.Items.Remove(_lvi));
+            }
+        }
+
+        private void btn_key_reg_Click(object sender, EventArgs e)
+        {
+            int nLoop = 0;
+
+            lv_key_info.InvokeIfNeeded(() => nLoop = lv_key_info.Items.Count);
+
+            List<stKeyInfo> _listKeyInfo = new List<stKeyInfo>();
+            for (int i = 0; i < nLoop; i++)
+            {
+                stKeyInfo _stKeyInfo = new stKeyInfo();
+
+                lv_key_info.InvokeIfNeeded(() => _stKeyInfo.strDong     = lv_key_info.Items[i].SubItems[1].Text);
+                lv_key_info.InvokeIfNeeded(() => _stKeyInfo.strHo       = lv_key_info.Items[i].SubItems[2].Text);
+                lv_key_info.InvokeIfNeeded(() => _stKeyInfo.strKeySn    = lv_key_info.Items[i].SubItems[3].Text);
+                lv_key_info.InvokeIfNeeded(() => _stKeyInfo.strKeyId    = lv_key_info.Items[i].SubItems[4].Text);
+
+                _listKeyInfo.Add(_stKeyInfo);
+            }
+
+            MessageBox.Show("키등록을 시작 합니다.");
+
+            //KeyInfoMasterDel(_listKeyInfo);
+            KeyInfoMasterInsert(_listKeyInfo);
+            RegTblInsert(_listKeyInfo);
+
+            lv_key_info.InvokeIfNeeded(() => lv_key_info.Items.Clear());
+
+        }
+
+        private void btn_key_del_Click(object sender, EventArgs e)
+        {
+            int nLoop = 0;
+
+            lv_key_info.InvokeIfNeeded(() => nLoop = lv_key_info.Items.Count);
+
+            List<stKeyInfo> _listKeyInfo = new List<stKeyInfo>();
+            for (int i = 0; i < nLoop; i++)
+            {
+                stKeyInfo _stKeyInfo = new stKeyInfo();
+
+                lv_key_info.InvokeIfNeeded(() => _stKeyInfo.strDong = lv_key_info.Items[i].SubItems[1].Text);
+                lv_key_info.InvokeIfNeeded(() => _stKeyInfo.strHo = lv_key_info.Items[i].SubItems[2].Text);
+                lv_key_info.InvokeIfNeeded(() => _stKeyInfo.strKeySn = lv_key_info.Items[i].SubItems[3].Text);
+                lv_key_info.InvokeIfNeeded(() => _stKeyInfo.strKeyId = lv_key_info.Items[i].SubItems[4].Text);
+
+                _listKeyInfo.Add(_stKeyInfo);
+            }
+
+            MessageBox.Show("키 삭제를 시작 합니다.");
+
+            // Del_에 데이터를 입력하고,
+            // Key_Info_Master에 데이터를 삭제하고,
+            // Delete_Key_Info에 데이터를 저장함.
+
+            KeyInfoDel(_listKeyInfo);
+            lv_key_info.InvokeIfNeeded(() => lv_key_info.Items.Clear());
+        }
+
+        ////////////////////////////////////////////////////////////////////
+        // Del_에 데이터를 입력하고,
+        // Key_Info_Master에 데이터를 삭제하고, 
+        // Delete_Key_Info에 데이터를 저장함.            
+        private void KeyInfoDel(List<stKeyInfo> a_listKeyInfo)
+        {
+            string _strQry = "", _strDong = "", _strHo = "", _strKeySn = "", _strKeyId = "", _strTime = "";
+            try
+            {
+                foreach (stKeyInfo _st in a_listKeyInfo)
+                {
+                    _strDong = _st.strDong;
+                    _strHo = _st.strHo;
+                    _strKeySn = _st.strKeySn;
+                    _strKeyId = _st.strKeyId;
+                    _strTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                    // 1. Del_에 삭제할 데이터 입력
+                    List<string> _listLBName = GetLBName(_strDong, _strHo);
+                    foreach (string _strLBName in _listLBName)
+                    {
+                        _strQry = string.Format("Insert Into Del_{0}(Dong, Ho, Key_Sn, Key_Id, State) values({1}, {2}, '{3}', '{4}', 0);",
+                            _strLBName, _strDong, _strHo, _strKeySn, _strKeyId);
+
+                        m_mysql.MySqlExec(_strQry);
+                        Thread.Sleep(10);
+                    }
+
+                    // 2. Key_Info_Master에서 Key 데이터 삭제
+                    _strQry = string.Format("Delete FRom Key_Info_Master where Dong={0} and Ho={1} and Key_Sn='{2}' and Key_Id='{3}';",
+                                    _strDong, _strHo, _strKeySn, _strKeyId);
+                    m_mysql.MySqlExec(_strQry);
+                    Thread.Sleep(10);
+
+                    // 3. Delete_Key_Info에 삭제 데이터 저장함.
+                    _strQry = string.Format("Insert Into Delete_Key_Info(Dong, Ho, Key_Sn, Key_Id, DelDate) values({0}, {1}, '{2}', '{3}','{4}');",
+                        _strDong, _strHo, _strKeySn, _strKeyId, _strTime);
+                    m_mysql.MySqlExec(_strQry);
+                    Thread.Sleep(10);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("KeyInfoDel() 예외 발생: " + ex.Message.ToString());
+                Console.WriteLine("strQry: " + _strQry);
+            }
+
+        }
+
+        ////////////////////////////////////////////////////////////////////
+        // 새로 등록되는 Key_Info_Master Tbl 정보를 변경하고
+        // 기존에 있던 정보를 Del Table에 옮김(9999동 9999호는 Del_Tbl에 옮기지 않음).
+        // 그리고 Key 관리(Log)를 위해 삭제하는 정보를 Delete_Key_Info에 Data를 넣음.
+        private void KeyInfoMasterDel(List<stKeyInfo> a_listKeyInfo)
+        {
+            string _strQry = "", _strDong = "", _strHo = "", _strKeySn = "", _strKeyId = "", _strTime = "";
+            // 1. 삭제할 키의 동, 호 정보를 찾음.
+            List<stKeyInfo> _listDelInfo = new List<stKeyInfo>();
+            foreach (stKeyInfo _st in a_listKeyInfo)
+            {
+                bool _bFlag = true;
+
+                foreach (stKeyInfo _del in _listDelInfo)
+                {
+                    if ((_st.strDong == _del.strDong) &&
+                        (_st.strHo == _del.strHo))
+                    {
+                        _bFlag = false;
+                        break;
+                    }
+                }
+
+                if (_bFlag == true)
+                {
+                    _listDelInfo.Add(_st);
+                }
+            }
+
+            // 2. 삭제할 키데이터를 Del Tbl에 넣음.
+            foreach (stKeyInfo _del in _listDelInfo)
+            {
+                if ((_del.strDong == "9999") ||
+                    (_del.strHo == "9999"))
+                    continue;
+
+                _strQry = string.Format("Select Dong, Ho, Key_Sn, Key_Id From Key_Info_Master where Dong = {0} and Ho = {1};", _del.strDong, _del.strHo);
+
+                List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 4);
+
+                foreach (string[] _str in _qryList)
+                {
+                    _strDong = _str[0];
+                    _strHo = _str[1];
+                    _strKeySn = _str[2];
+                    _strKeyId = _str[3];
+
+                    List<string> _listLBName = GetLBName(_strDong, _strHo);
+
+                    foreach (string _strLBName in _listLBName)
+                    {
+                        _strQry = string.Format("Insert Into Del_{0}(Dong, Ho, Key_Sn, Key_Id, State) values({1}, {2}, '{3}', '{4}', 0);",
+                            _strLBName, _strDong, _strHo, _strKeySn, _strKeyId);
+
+                        m_mysql.MySqlExec(_strQry);
+                    }
+                }
+            }
+
+            // 3. Delete_Key_Info 삭제할 Data 삽입
+            foreach (stKeyInfo _del in _listDelInfo)
+            {
+                if ((_del.strDong == "9999") ||
+                    (_del.strHo == "9999"))
+                    continue;
+
+                _strQry = string.Format("Select Dong, Ho, Key_Sn, Key_Id From Key_Info_Master where Dong = {0} and Ho = {1};", _del.strDong, _del.strHo);
+
+                List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 4);
+
+                foreach (string[] _str in _qryList)
+                {
+                    _strDong = _str[0];
+                    _strHo = _str[1];
+                    _strKeySn = _str[2];
+                    _strKeyId = _str[3];
+                    _strTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                    _strQry = string.Format("Insert Into Delete_Key_Info(Dong, Ho, Key_Sn, Key_Id, DelDate) values({0}, {1}, '{2}', '{3}','{4}');",
+                        _strDong, _strHo, _strKeySn, _strKeyId, _strTime);
+
+                    m_mysql.MySqlExec(_strQry);
+
+                }
+            }
+
+            // 4. Key_Info_Master에서 기존 Key 정보 삭제
+            foreach (stKeyInfo _del in _listDelInfo)
+            {
+                if ((_del.strDong == "9999") ||
+                    (_del.strHo == "9999"))
+                    continue;
+
+                _strQry = string.Format("Select Dong, Ho, Key_Sn, Key_Id From Key_Info_Master where Dong = {0} and Ho = {1};", _del.strDong, _del.strHo);
+
+                List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 4);
+
+                foreach (string[] _str in _qryList)
+                {
+                    _strDong = _str[0];
+                    _strHo = _str[1];
+                    _strKeySn = _str[2];
+                    _strKeyId = _str[3];
+
+                    _strQry = string.Format("Delete FRom Key_Info_Master where Dong={0} and Ho={1} and Key_Sn='{2}' and Key_Id='{3}';",
+                                _strDong, _strHo, _strKeySn, _strKeyId);
+                    m_mysql.MySqlExec(_strQry);
+                }
+            }
+
+        }
+
+        ////////////////////////////////////////////////////////////////////
+        // Key_Info_Master에 Key Data 삽입
+        private void KeyInfoMasterInsert(List<stKeyInfo> a_listKeyInfo)
+        {
+            string _strQry = "", _strTime = "";
+            foreach (stKeyInfo _st in a_listKeyInfo)
+            {
+                _strTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                _strQry = string.Format("Insert Into Key_Info_Master(Dong, Ho, Key_Sn, Key_Id, RegDate) values({0}, {1}, '{2}', '{3}', '{4}');",
+                    _st.strDong, _st.strHo, _st.strKeySn, _st.strKeyId, _strTime);
+                m_mysql.MySqlExec(_strQry);
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////
+        // Reg Table에 키데이터 등록
+        private void RegTblInsert(List<stKeyInfo> a_listKeyInfo)
+        {
+            string _strQry = "";
+            foreach (stKeyInfo _st in a_listKeyInfo)
+            {
+                List<string> _listLBName = GetLBName(_st.strDong, _st.strHo);
+
+                foreach (string _strLBName in _listLBName)
+                {
+                    for (int i = 0; i < 2; i++) // Reg Tbl에 키를 두번 등록함.
+                    {
+                        _strQry = string.Format("Insert Into Reg_{0}(Dong, Ho, Key_Sn, Key_Id, State) values({1}, {2}, '{3}', '{4}', 0);",
+                            _strLBName, _st.strDong, _st.strHo, _st.strKeySn, _st.strKeyId);
+                        m_mysql.MySqlExec(_strQry);
+                    }
+                }
+            }
+
+        }
+
+        ///////////////////////////////////////////////////
+        // Data 수신 Event
+        public void p_DevDataRecv()
+        {
+            try
+            {
+                //Console.WriteLine("Data Recv 확인");
+                if (m_server.OPRecvData.Count > 0)
+                {
+                    OPDevPtrl opDevRecv = m_server.OPRecvData.Dequeue();
+                    RecvDataProc(opDevRecv);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("p_DevDataRecv() 예외 발생 : " + ex.Message.ToString());
+            }
+        }
+
+        private void RecvDataProc(OPDevPtrl a_OpDevData)
+        {
+            try
+            {
+                switch (a_OpDevData.byType)
+                {
+                    case 0xE0:  // 이벤트 
+                        switch (a_OpDevData.byCmd)
+                        {
+                            case 0x01:  // 접속 이벤트
+                            case 0x07:  // Test를 위해
+                                DeviceAdd(a_OpDevData);
+                                break;
+                            case 0x02:  // 출입 인증 이벤트(엘리베이터를 호출 해야함.)
+                                // 2초간 대기 후 인증 데이터가 들어오는지 확인
+                                KeyConfirm(a_OpDevData);
+                                break;
+                        }
+                        break;
+                    case 0xC0:  // 명령어 응답
+                        switch (a_OpDevData.byCmd)
+                        {
+                            case 0x01:  // 상태 응답
+                                StateCheckReq(a_OpDevData);
+                                break;
+                            case 0x02:  // Reset 요청 응답
+                                ResponseReset(a_OpDevData);
+                                break;
+                            case 0x03:  // 키 ID 등록 응답
+                                KeyIdRegister(a_OpDevData);
+                                break;
+                            case 0x04:  // 키 ID 삭제 응답
+                                KeyIdDelete(a_OpDevData);
+                                break;
+                            case 0x05:  // 키 ID 리스트 응답
+                                MessageBox.Show("키 ID 리스트 구현 해야 함.");
+                                break;
+                            case 0x06:  // 문열림 응답
+                                MessageBox.Show("문열림 응답 구현 해야 함.");
+                                break;
+                        }
+                        break;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("RecvDataProc()에서 예외 발생:" + ex.Message.ToString());
+            }
+        }
+
+        private void DeviceAdd(OPDevPtrl a_OpDevData)
+        {
+            DevInfo _devInfo = new DevInfo();
+
+            _devInfo.socket = a_OpDevData.socket;
+            _devInfo.byGid = a_OpDevData.byGid;
+            _devInfo.byDid = a_OpDevData.byDid;
+            _devInfo.nStateCnt = 0;
+
+            int nIdx = 0;
+            foreach (DevInfo devInfo in m_listUkrInfo)
+            {
+                if ((devInfo.byGid == _devInfo.byGid) &&
+                    (devInfo.byDid == _devInfo.byDid))
+                {
+                    //this.LogPrint("DeviceAdd()");
+                    DeviceDel(devInfo.socket);
+                    break;
+                }
+                nIdx++;
+            }
+
+            ////////////////////////////////
+            // Data Send Thread 생성
+            Thread hThread = new Thread(new ParameterizedThreadStart(UkrSendThread));
+            hThread.Start(_devInfo);
+            //_devInfo.IsThread = true;
+            m_listUkrInfo.Add(_devInfo);
+            StateAdd(_devInfo);
+
+            ////////////////////////////////
+            // 로비 정보(IP) Update
+            //string _strQry = string.Format("Select Lobby_Name From Lobby_ID where Lobby_GID='{0}' and Lobby_DID='{1}';", _devInfo.byGid.ToString("X2"), _devInfo.byDid.ToString("X2"));
+            //string _strLobbyName = "";
+            //List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+            //foreach (string[] _str in _qryList)
+            //{
+            //    _strLobbyName = _str[0];
+            //}
+            string _strLobbyName = this.GetLobbyName(_devInfo.byGid.ToString("X2"), _devInfo.byDid.ToString("X2"));
+
+            string _strLobbyIp = string.Format("{0}.{1}.{2}.{3}", a_OpDevData.byData[4].ToString(), a_OpDevData.byData[5].ToString(), a_OpDevData.byData[6].ToString(), a_OpDevData.byData[7].ToString());
+            string _strQry = string.Format("Update Lobby_Info Set LobbyIp = '{0}',Ping_State = 1, CR_State = 1 where LobbyName = '{1}';", _strLobbyIp, _strLobbyName);
+            m_mysql.MySqlExec(_strQry);
+
+            _devInfo.LobbyName = _strLobbyName;
+            string _strLog = string.Format("{0} 로비 접속 : Gid:{1}, Did:{2}, IP:{3}", _strLobbyName, _devInfo.byGid.ToString("X2"), _devInfo.byDid.ToString("X2"), _strLobbyIp);
+            this.LogPrint(_strLog);
+            //Console.WriteLine(_strQry);
+        }
+
+        private void StateAdd(DevInfo a_devInfo)
+        {
+            stStateInfo _stStateInfo = new stStateInfo();
+            _stStateInfo.byGid = a_devInfo.byGid;
+            _stStateInfo.byDid = a_devInfo.byDid;
+            _stStateInfo.nStateCnt = 0;
+
+            m_listStateInfo.Add(_stStateInfo);
+        }
+
+        private void DeviceDel(OPDevPtrl a_OpDevData)
+        {
+            DeviceDel(a_OpDevData.socket);
+        }
+
+        private void DeviceDel(Socket socket)
+        {
+            int nIdx = 0;
+            foreach (DevInfo devInfo in m_listUkrInfo)
+            {
+                if ((devInfo.socket == socket))
+                {
+                    devInfo.socket.Close(0);
+                    StateDel(devInfo.byGid, devInfo.byDid);
+                    m_listUkrInfo.RemoveAt(nIdx);
+
+                    string _strLobbyName = this.GetLobbyName(devInfo.byGid.ToString("X2"), devInfo.byDid.ToString("X2"));
+                    string _strQry = string.Format("Update Lobby_Info Set Ping_State = 0, CR_State = 0 where LobbyName = '{0}';", _strLobbyName);
+                    m_mysql.MySqlExec(_strQry);
+
+                    string _strLog = string.Format("{0} 로비 해제 : Gid:{1}, Did:{2}", _strLobbyName, devInfo.byGid.ToString("X2"), devInfo.byDid.ToString("X2"));
+                    this.LogPrint(_strLog);
+
+                    break;
+                }
+                nIdx++;
+            }
+        }
+
+        private void StateDel(byte a_byGid, byte a_byDid)
+        {
+            int nIdx = 0;
+            foreach (stStateInfo _st in m_listStateInfo)
+            {
+                if ((_st.byGid == a_byGid) &&
+                    (_st.byDid == a_byDid))
+                {
+                    m_listStateInfo.RemoveAt(nIdx);
+                    break;
+                }
+                nIdx++;
+            }
+        }
+
+        private void UkrSendThread(object o)
+        {
+            DevInfo _UKR = (DevInfo)o;
+            string _strGid = "", _strDid = "", _strLBName = "", _strRegTblName = "", _strDelTblName = "";
+            _strGid = _UKR.byGid.ToString("X2");
+            _strDid = _UKR.byDid.ToString("X2");
+
+            //Console.WriteLine("UkrSendThread 쓰레드 시작 ==> " + "Gid:" + _strGid + " Did:" + _strDid);
+
+            // 1. 로비 이름을 읽음
+            string _strQry = string.Format("SELECT na.Lobby_Name, info.Reg_Tbl, info.Del_Tbl FROM Lobby_ID AS na INNER JOIN Lobby_Info AS info ON na.Lobby_Name = info.LobbyName and na.Lobby_GID = '{0}' and na.Lobby_DID = '{1}';", _strGid, _strDid);
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 3);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strLBName = _str[0];
+                _strRegTblName = _str[1];
+                _strDelTblName = _str[2];
+            }
+
+            int nSyncCnt = 0;
+            int nStateCnt = 0;
+            //Console.WriteLine("Gid:" + _strGid + " Did:" + _strDid + " LobbyName = " + _strLBName + " / " + _strRegTblName + " / " + _strDelTblName);
+
+            if (_UKR.socket == null)
+            {
+                Console.WriteLine("UkrSendThread() Socket이 Null 입니다");
+                return;
+            }
+
+            _UKR.bReset = false;
+
+            while (Program.IsConnected(_UKR.socket))
+            {
+                //DB에 로비 네임에 관련된 데이타가 없을 경우
+                if (_strDid.Length == 0 || _strRegTblName.Length == 0 || _strDelTblName.Length == 0)
+                {
+                    Thread.Sleep(1000);
+                    continue;
+                }
+
+                // 1. 기기에 리셋을 요청 한다
+                if (_UKR.bReset)
+                    RequestReset(_UKR);
+
+                // 2. Del Tab Check(Del Table에 값이 있으면 True
+                if (DelTblCheck(_UKR, _strDelTblName))
+                {
+                    nSyncCnt = 0;
+                    nStateCnt = 0;
+                    Thread.Sleep(1000);
+                    continue;
+                }
+                // 3. Reg Tbl Check
+                if (RegTblCheck(_UKR, _strRegTblName))
+                {
+                    nSyncCnt = 0;
+                    nStateCnt = 0;
+                    Thread.Sleep(1000);
+                    continue;
+                }
+
+                // 4. Snyc Tbl Check
+                if (++nSyncCnt > 20)    // 20초
+                {
+                    if (SyncTblCheck(_UKR, _strLBName))
+                    {
+                        nSyncCnt = 0;
+                        nStateCnt = 0;
+                        continue;
+                    }
+                }
+
+                // 5. 상태 체크 전송
+                // if (++nStateCnt > 60 * 3)    // 3분
+                if (++nStateCnt > 60)    // 1분(테스트)
+                {
+                    StateCheck(_UKR);
+
+                    nStateCnt = 0;
+                }
+
+                Thread.Sleep(1000);
+            }
+
+            //Console.WriteLine("UkrSendThread() Thread 종료 ==> " + "Gid:" + _strGid + " Did:" + _strDid);
+        }
+
+        // 리셋 타이머 제어
+        public void ResetTimer(bool start)
+        {
+            if (start)
+                _resetTimer.SetTimer(ref m_listUkrInfo);
+            else
+                _resetTimer.Stop();
+        }
+
+        // UKR 리셋
+        private void RequestReset(DevInfo a_UKR)
+        {
+            try
+            {
+                // 연결 되지 않은 경우
+                if (Program.IsConnected(a_UKR.socket) == false)
+                    return;
+
+                byte[] _byPacket = MakeProtocol(a_UKR.byGid, a_UKR.byDid, "", 0x02, 0x01);
+
+                // 패킷을 생성 하지 못 한 경우
+                if (_byPacket == null)
+                    return;
+
+                // 패킷을 보내지 못한 경우
+                if (a_UKR.socket.Send(_byPacket) <= 0)
+                    return;
+
+                // 리셋 요청 성공
+                this.LogPrint(string.Format("{0} 리셋 요청 : Gid:{1:X2}, Did:{2:X2}", a_UKR.LobbyName, a_UKR.byGid, a_UKR.byDid));
+
+                a_UKR.bReset = false;
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("Reset 예외 발생: " + ex.Message.ToString());
+            }
+        }
+
+        // UKR 리셋 응답
+        private void ResponseReset(OPDevPtrl a_OpDevData)
+        {
+            foreach (DevInfo dev in m_listUkrInfo)
+            {
+                if (dev.byGid != a_OpDevData.byGid || dev.byDid != a_OpDevData.byDid)
+                    continue;
+
+                this.LogPrint(string.Format("{0} 리셋 응답 : Gid:{1:X2}, Did:{2:X2}", dev.LobbyName,dev.byGid, dev.byDid));
+            }
+        }
+
+        private bool DelTblCheck(DevInfo a_UKR, string a_strDelName)
+        {
+            try
+            {
+                string _strQry = string.Format("SELECT Key_Id FROM {0} order by Num asc limit 0,1;", a_strDelName);
+                string _strKeyId = "";
+
+                List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+                if (_qryList.Count <= 0)
+                    return false;
+
+                foreach (string[] _str in _qryList)
+                {
+                    _strKeyId = _str[0];
+                }
+
+                byte[] _byPacket = MakeProtocol(a_UKR.byGid, a_UKR.byDid, _strKeyId, 0x04, 0x01);
+                if (_byPacket == null)
+                    return true;
+
+                if (Program.IsConnected(a_UKR.socket))
+                {
+                    a_UKR.socket.Send(_byPacket);
+                    //m_server.SendAsync(a_UKR.socket, _byPacket);
+                }
+
+                Thread.Sleep(1000 * 2); // 2초 대기
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("DelTblCheck() 예외 발생: " + ex.Message.ToString());
+            }
+            return true;
+        }
+
+        private bool RegTblCheck(DevInfo a_UKR, string a_strRegName)
+        {
+            try
+            {
+                string _strQry = string.Format("SELECT Key_Id FROM {0} order by Num asc limit 0,1;", a_strRegName);
+                string _strKeyId = "";
+
+                List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+                if (_qryList.Count <= 0)
+                    return false;
+
+                foreach (string[] _str in _qryList)
+                {
+                    // 2020-04-07 한정태 수정
+                    // 사옹자가 Key_Id에 공백만을 넣었을 때, MakeProtocol에서 Null이 리턴이 된다. 
+                    // 그래서 공백만이 있을 때는 데이터를 삭제한다.
+                    //_strKeyId = _str[0];
+                    _strKeyId = _str[0].Trim();
+                    if (_strKeyId.Length == 0)
+                    {
+                        //RegTableWhiteSpaceDate(a_strRegName);
+                        _strQry = string.Format("Delete From {0} where Key_Id = '{1}';", a_strRegName, _str[0]);
+                        m_mysql.MySqlExec(_strQry);
+                        return true;
+                    }
+                }
+
+                byte[] _byPacket = MakeProtocol(a_UKR.byGid, a_UKR.byDid, _strKeyId, 0x03, 0x01);
+                if (_byPacket == null)
+                    return true;
+
+                if (Program.IsConnected(a_UKR.socket))
+                    a_UKR.socket.Send(_byPacket);
+
+                Thread.Sleep(1000 * 2); // 2초 대기
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("RegTblCheck() 예외 발생: " + ex.Message.ToString());
+            }
+
+            return true;
+        }
+
+        private bool SyncTblCheck(DevInfo a_UKR, string a_strLBName)
+        {
+            try
+            {
+                string _strQry = string.Format("SELECT Flag FROM Lobby_Sync where LobbyName = '{0}';", a_strLBName);
+                string _strFlag = "";
+
+                List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+                if (_qryList.Count < 0)
+                    return false;
+
+                foreach (string[] _str in _qryList)
+                {
+                    _strFlag = _str[0];
+                }
+
+                if (_strFlag == "1")
+                {
+
+                    //전체 삭제 송신
+                    byte[] _byPacket = MakeProtocol(a_UKR.byGid, a_UKR.byDid, "", 0x04, 0x02);
+                    if (_byPacket == null)
+                        return true;
+
+                    if (Program.IsConnected(a_UKR.socket))
+                        a_UKR.socket.Send(_byPacket);
+
+                    Thread.Sleep(1000 * 30); // 2초 대기
+
+                    return true;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("SyncTblCheck() 예외 발생: " + ex.Message.ToString());
+            }
+            return false;
+        }
+
+        private void StateCheck(DevInfo a_UKR)
+        {
+            int nStateCnt = 0;
+
+            for (int i = 0; i < m_listStateInfo.Count; i++)
+            {
+                stStateInfo _stStateInfo = m_listStateInfo[i];
+
+                if ((_stStateInfo.byGid == a_UKR.byGid) &&
+                    (_stStateInfo.byDid == a_UKR.byDid))
+                {
+                    _stStateInfo.nStateCnt++;
+                    m_listStateInfo[i] = _stStateInfo;
+                    nStateCnt = _stStateInfo.nStateCnt;
+                    break;
+                }
+            }
+
+            string _strLobbyName = this.GetLobbyName(a_UKR.byGid.ToString("X2"), a_UKR.byDid.ToString("X2"));
+
+            if (nStateCnt == 5)
+            {
+                // 경고문
+                string _strLog = string.Format("{0} 로비 상태체크 응답 5회 없음. Gid:{1}, Did:{0}", _strLobbyName, a_UKR.byGid.ToString("X2"), a_UKR.byDid.ToString("X2"));
+                this.LogPrint(_strLog);
+            }
+
+            if (nStateCnt > 10)   // 10회 이상 응답이 없음.
+            {
+                // UKR 삭제
+                string _strLog = string.Format("{0} 로비 상태체크 응답 10회 없음. Gid:{1}, Did:{0}", _strLobbyName, a_UKR.byGid.ToString("X2"), a_UKR.byDid.ToString("X2"));
+                //Console.WriteLine(_strLog);
+                this.LogPrint(_strLog);
+                DeviceDel(a_UKR.socket);
+            }
+
+            // 상태 체크 Send 
+            byte[] _byPacket = MakeProtocol(a_UKR.byGid, a_UKR.byDid, "", 0x01, 0x12);
+            if (_byPacket == null)
+                return;
+
+            if (Program.IsConnected(a_UKR.socket))
+                a_UKR.socket.Send(_byPacket);
+
+            string _strQry = string.Format("Update Lobby_Info Set Ping_State = 0, CR_State=0 where LobbyName = '{0}';", _strLobbyName);
+            m_mysql.MySqlExec(_strQry);
+
+            return;
+        }
+
+        public byte[] MakeProtocol(byte a_byGid, byte a_byDid, string a_strKeyId, byte a_byCmd, byte a_byOpt)
+        {
+            try
+            {
+                byte[] _by = new byte[256];
+                byte[] _byRet;
+                int _nPacketSize = 0;
+                byte[] _byKeyId = new byte[8];
+                byte _byCrc = 0x00;
+
+                if (a_strKeyId != "")
+                {
+                    if (a_strKeyId.Length != 16)
+                    {
+                        //Console.WriteLine("MakeProtocal Fail => Gid: " + a_byGid.ToString("X2") + " Did: " + a_byDid.ToString("X2") +
+                        //                " Cmd: " + a_byCmd.ToString("X2") + " Opt: " + a_byOpt.ToString("X2") +
+                        //                " Key Id:" + a_strKeyId);
+                        return null;
+                    }
+
+                    _byKeyId = GetStringToHex(a_strKeyId);
+                }
+
+                _by[0] = 0x02;
+                _by[1] = 0x33;
+                _by[2] = m_bySeq;
+                _by[3] = 0x00;      // Type
+                _by[4] = a_byCmd;   // Cmd
+                _by[5] = a_byOpt;   // Opt
+                switch (a_byCmd)
+                {
+                    case 0x01:  // 상태 요청 응답
+                        switch (a_byOpt)
+                        {
+                            case 0x12:
+                                {
+                                    _nPacketSize = 11;
+                                    _by[6] = 0x02;  // Len
+                                    _by[7] = a_byGid;
+                                    _by[8] = a_byDid;
+
+                                    for (int i = 1; i < 9; i++)
+                                    {
+                                        _byCrc = (byte)(_byCrc ^ _by[i]);
+                                    }
+                                    _by[9] = _byCrc;
+                                    _by[10] = 0x03;
+                                }
+                                break;
+                        }
+                        break;
+                    case 0x02:
+                        {
+                            // reset
+                            _nPacketSize = 11;
+                            _by[6] = 0x02;      //LEN
+                            _by[7] = a_byGid;
+                            _by[8] = a_byDid;
+
+                            for (int i = 1; i < 9; i++)
+                                _byCrc = (byte)(_byCrc ^ _by[i]);
+
+                            _by[9] = _byCrc;
+                            _by[10] = 0x03;
+                            break;
+                        }
+                    case 0x03:  // 키 등록
+                        {
+                            switch (a_byOpt)
+                            {
+                                case 0x01:
+                                    {
+                                        _nPacketSize = 19;
+                                        _by[6] = 0x0A;  // Len
+                                        _by[7] = a_byGid;
+                                        _by[8] = a_byDid;
+                                        _by[9] = _byKeyId[0];
+                                        _by[10] = _byKeyId[1];
+                                        _by[11] = _byKeyId[2];
+                                        _by[12] = _byKeyId[3];
+                                        _by[13] = _byKeyId[4];
+                                        _by[14] = _byKeyId[5];
+                                        _by[15] = _byKeyId[6];
+                                        _by[16] = _byKeyId[7];
+
+                                        for (int i = 1; i < 17; i++)
+                                        {
+                                            _byCrc = (byte)(_byCrc ^ _by[i]);
+                                        }
+                                        _by[17] = _byCrc;
+                                        _by[18] = 0x03;
+                                    }
+                                    break;
+                            }
+                        }
+                        break;
+
+                    case 0x04:  // 키 삭제
+                        switch (a_byOpt)
+                        {
+                            case 0x01:  // 키 삭제
+                                {
+                                    _nPacketSize = 19;
+                                    _by[6] = 0x0A;  // Len
+                                    _by[7] = a_byGid;
+                                    _by[8] = a_byDid;
+                                    _by[9] = _byKeyId[0];
+                                    _by[10] = _byKeyId[1];
+                                    _by[11] = _byKeyId[2];
+                                    _by[12] = _byKeyId[3];
+                                    _by[13] = _byKeyId[4];
+                                    _by[14] = _byKeyId[5];
+                                    _by[15] = _byKeyId[6];
+                                    _by[16] = _byKeyId[7];
+
+                                    for (int i = 1; i < 17; i++)
+                                    {
+                                        _byCrc = (byte)(_byCrc ^ _by[i]);
+                                    }
+                                    _by[17] = _byCrc;
+                                    _by[18] = 0x03;
+                                }
+                                break;
+                            case 0x02:  // 키 전체 삭제
+                                {
+                                    _nPacketSize = 11;
+                                    _by[6] = 0x02;  // Len
+                                    _by[7] = a_byGid;
+                                    _by[8] = a_byDid;
+
+                                    for (int i = 1; i < 9; i++)
+                                    {
+                                        _byCrc = (byte)(_byCrc ^ _by[i]);
+                                    }
+                                    _by[9] = _byCrc;
+                                    _by[10] = 0x03;
+                                }
+                                break;
+                        }
+                        break;
+
+                }
+
+                _byRet = new byte[_nPacketSize];
+                Buffer.BlockCopy(_by, 0, _byRet, 0, _nPacketSize);
+
+                this.m_bySeq++;
+                return _byRet;
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("MakeProtocal Fail : Msg:" + ex.Message.ToString());
+                Console.WriteLine("Gid: " + a_byGid.ToString("X2") + " Did: " + a_byDid.ToString("X2") +
+                                " Cmd" + a_byCmd.ToString("X2") + " Opt: " + a_byOpt.ToString("X2") +
+                                " Key Id:" + a_strKeyId);
+                return null;
+            }
+        }
+
+        private byte[] GetStringToHex(string a_str)
+        {
+            if (a_str.Length % 2 != 0)
+                return null;
+
+            byte[] _byRet = new byte[a_str.Length / 2];
+
+            for (int i = 0; i < a_str.Length; i = i + 2)
+            {
+                _byRet[i / 2] = Convert.ToByte(GetStringToInt(a_str.Substring(i, 2)));
+            }
+
+            return _byRet;
+        }
+
+        ///////////////////////////////////////////////////////////
+        // 상태 요청 응답
+        private void StateCheckReq(OPDevPtrl a_OpDevData)
+        {
+
+            for (int i = 0; i < m_listStateInfo.Count; i++)
+            {
+                stStateInfo _stStateInfo = m_listStateInfo[i];
+
+                if ((_stStateInfo.byGid == a_OpDevData.byGid) &&
+                    (_stStateInfo.byDid == a_OpDevData.byDid))
+                {
+                    _stStateInfo.nStateCnt = 0;
+                    m_listStateInfo[i] = _stStateInfo;
+
+                    string _strLobbyName = this.GetLobbyName(_stStateInfo.byGid.ToString("X2"), _stStateInfo.byDid.ToString("X2"));
+
+                    string _strQry = string.Format("Update Lobby_Info Set Ping_State = 1, CR_State=1 where LobbyName = '{0}';", _strLobbyName);
+                    m_mysql.MySqlExec(_strQry);
+
+                    break;
+                }
+            }
+
+            return;
+        }
+
+        ///////////////////////////////////////////////////////////
+        // 키 ID 등록 응답
+        private void KeyIdRegister(OPDevPtrl a_OpDevData)
+        {
+            string _strQry = "", _strGid = "", _strDid = "", _strKeyId = "", _strKeySn = "";
+            string _strDong = "", _strHo = "", _strLBName = "", _strRegTblName = "", _strTime = "", _strComment = "";
+
+            _strGid = a_OpDevData.byGid.ToString("X2");
+            _strDid = a_OpDevData.byDid.ToString("X2");
+            _strKeyId = BitConverter.ToString(a_OpDevData.byData, 2).Replace("-", "");
+
+            //  로비 이름 정보를 읽음
+            _strQry = string.Format("SELECT na.Lobby_Name, info.Reg_Tbl FROM Lobby_ID AS na INNER JOIN Lobby_Info AS info ON na.Lobby_Name = info.LobbyName and na.Lobby_GID = '{0}' and na.Lobby_DID = '{1}';", _strGid, _strDid);
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 2);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strLBName = _str[0];
+                _strRegTblName = _str[1];
+            }
+
+            // Dong, Ho 정보를 읽음
+            _qryList.Clear();
+            _strQry = string.Format("SELECT Dong, Ho, Key_Sn FROM {0} where Key_Id = '{1}';", _strRegTblName, _strKeyId);
+            _qryList = m_mysql.MySqlSelect(_strQry, 3);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strDong = _str[0];
+                _strHo = _str[1];
+                _strKeySn = _str[2];
+            }
+
+            switch (a_OpDevData.byOpt)
+            {
+                case 0x01:  // Key ID 등록 성공
+                case 0x02:  // Key ID가 기존에 등록 되어 있음
+
+                    // Reg Tbl에 데이터 삭제
+                    // 2020-04-15 공백이 들어간 ID는 키가 등록이 되나, 삭제가 되지 않아서
+                    // 기존 Query문에서 Delete From Reg_301_1_A where Key_Id = '1234567890321654'; 에서
+                    // like 구문으로 수정
+                    _strQry = string.Format("Delete From {0} where Key_Id like '%{1}%' limit 1;", _strRegTblName, _strKeyId);
+                    m_mysql.MySqlExec(_strQry);
+
+                    // Log Tbl에 결과 기록
+                    _strTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    _strComment = string.Format("Dong={0}, Ho={1}, KeyId={2} Register Success", _strDong, _strHo, _strKeyId);
+                    _strQry = string.Format("Insert Into Log_KmsLobby(LogDate, LobbyName, Comment) values('{0}', '{1}', '{2}');", _strTime, _strLBName, _strComment);
+                    m_mysql.MySqlExec(_strQry);
+
+                    string _strLobbyName = this.GetLobbyName(_strGid, _strDid);
+                    string _strLog = string.Format("{0} 키 등록 성공 : {1}동, {2}호, KeySn:{3}, KeyId:{4}", _strLobbyName, _strDong, _strHo, _strKeySn, _strKeyId);
+                    this.LogPrint(_strLog);
+
+                    break;
+                case 0x03:  // Key ID 등록 실패
+                    {
+                        //Console.WriteLine("Key Register Fail ==> Gid: " + a_OpDevData.byGid.ToString("X2") + " Did: " + a_OpDevData.byDid.ToString("X2") +
+                        //                " Cmd" + a_OpDevData.byCmd.ToString("X2") + " Opt: " + a_OpDevData.byOpt.ToString("X2") +
+                        //                " Key Id:" + _strKeyId);
+                    }
+                    break;
+            }
+        }
+
+        ///////////////////////////////////////////////////////////
+        // 키 ID 삭제 응답
+        private void KeyIdDelete(OPDevPtrl a_OpDevData)
+        {
+            string _strQry = "", _strGid = "", _strDid = "", _strKeyId = "", _strKeySn = "";
+            string _strDong = "", _strHo = "", _strLBName = "", _strDelTblName = "", _strTime = "", _strComment = "";
+            string _strLobbyName = "", _strLog = "";
+
+            _strGid = a_OpDevData.byGid.ToString("X2");
+            _strDid = a_OpDevData.byDid.ToString("X2");
+
+            //  로비 이름 정보를 읽음
+            _strQry = string.Format("SELECT na.Lobby_Name, info.Del_Tbl FROM Lobby_ID AS na INNER JOIN Lobby_Info AS info ON na.Lobby_Name = info.LobbyName and na.Lobby_GID = '{0}' and na.Lobby_DID = '{1}';", _strGid, _strDid);
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 2);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strLBName = _str[0];
+                _strDelTblName = _str[1];
+            }
+
+            switch (a_OpDevData.byOpt)
+            {
+                case 0x01:
+                case 0x02:
+                    {
+                        _strKeyId = BitConverter.ToString(a_OpDevData.byData, 2).Replace("-", "");
+
+                        // Dong, Ho 정보를 읽음
+                        _qryList.Clear();
+                        _strQry = string.Format("SELECT Dong, Ho, Key_Sn FROM {0} where Key_Id = '{1}';", _strDelTblName, _strKeyId);
+                        _qryList = m_mysql.MySqlSelect(_strQry, 3);
+
+                        foreach (string[] _str in _qryList)
+                        {
+                            _strDong = _str[0];
+                            _strHo = _str[1];
+                            _strKeySn = _str[2];
+                        }
+
+                        // Del Tbl에 데이터 삭제
+                        _strQry = string.Format("Delete From {0} where Key_Id = '{1}' limit 1;", _strDelTblName, _strKeyId);
+                        m_mysql.MySqlExec(_strQry);
+
+                        // Log Tbl에 결과 기록
+                        _strTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        _strComment = string.Format("Dong={0}, Ho={1}, KeyId={2} Delete Success", _strDong, _strHo, _strKeyId);
+                        _strQry = string.Format("Insert Into Log_KmsLobby(LogDate, LobbyName, Comment) values('{0}', '{1}', '{2}');", _strTime, _strLBName, _strComment);
+                        m_mysql.MySqlExec(_strQry);
+
+                        _strLobbyName = this.GetLobbyName(_strGid, _strDid);
+                        _strLog = string.Format("{0} 키 삭제 성공 : {1}동, {2}호, KeySn:{3}, KeyId:{4}", _strLobbyName, _strDong, _strHo, _strKeySn, _strKeyId);
+                        this.LogPrint(_strLog);
+                    }
+                    break;
+                case 0x03:
+                    //Console.WriteLine("Key Delete Fail ==> Gid: " + a_OpDevData.byGid.ToString("X2") + " Did: " + a_OpDevData.byDid.ToString("X2") +
+                    //                " Cmd" + a_OpDevData.byCmd.ToString("X2") + " Opt: " + a_OpDevData.byOpt.ToString("X2") +
+                    //                " Key Id:" + _strKeyId);
+                    break;
+                case 0x04:
+                    // All Delete
+                    // Sync Tbl Update
+                    _strQry = string.Format("Update Lobby_Sync Set Flag = 0 where LobbyName = '{0}';", _strLBName);
+                    m_mysql.MySqlExec(_strQry);
+
+                    _strLobbyName = this.GetLobbyName(_strGid, _strDid);
+                    _strLog = string.Format("{0} 키 전체 삭제 성공 ", _strLobbyName);
+                    this.LogPrint(_strLog);
+
+                    // 로그 기록
+                    // Log Tbl에 결과 기록
+                    _strTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    _strComment = string.Format("{0} Lobby DeleteAll Success", _strLBName);
+                    _strQry = string.Format("Insert Into Log_KmsLobby(LogDate, LobbyName, Comment) values('{0}', '{1}', '{2}');", _strTime, _strLBName, _strComment);
+                    m_mysql.MySqlExec(_strQry);
+
+                    // 동기화 작업 진행
+                    KeySyncExec(_strLBName);
+                    break;
+                case 0x05:
+                    //Console.WriteLine("Key All Delete Fail ==> Gid: " + a_OpDevData.byGid.ToString("X2") + " Did: " + a_OpDevData.byDid.ToString("X2") +
+                    //                " Cmd" + a_OpDevData.byCmd.ToString("X2") + " Opt: " + a_OpDevData.byOpt.ToString("X2"));
+                    break;
+            }
+        }
+
+        //////////////////////////////////////////////////////////////
+        // 키 동기화 작업
+        private void KeySyncExec(string a_strLBName)
+        {
+            try
+            {
+                List<stKeyInfo> _stListKeyInfo = new List<stKeyInfo>();
+
+                string _strQry = string.Format("select Dong, Ho from Dong_Lobby where Lobby_Name = '{0}';", a_strLBName);
+                List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 2);
+
+                foreach (string[] _str in _qryList)
+                {
+                    stKeyInfo _stKeyInfo = new stKeyInfo();
+                    _stKeyInfo.strDong = _str[0];
+                    _stKeyInfo.strHo = _str[1];
+
+                    _stListKeyInfo.Add(_stKeyInfo);
+                }
+
+                // 마스터키 등록
+                {
+                    stKeyInfo _stKeyInfo = new stKeyInfo();
+                    _stKeyInfo.strDong = "9999";
+                    _stKeyInfo.strHo = "9999";
+
+                    _stListKeyInfo.Add(_stKeyInfo);
+                }
+
+                foreach (stKeyInfo _st in _stListKeyInfo)
+                {
+                    string _strDong = "", _strHo = "", _strKeySn = "", _strKeyId = "";
+                    _strQry = string.Format("select Dong, Ho, Key_Sn, Key_Id from Key_Info_Master where (Dong = {0} and Ho = {1})", _st.strDong, _st.strHo);
+
+                    List<string[]> _qryList1 = m_mysql.MySqlSelect(_strQry, 4);
+
+                    foreach (string[] _str in _qryList1)
+                    {
+                        _strDong = _str[0];
+                        _strHo = _str[1];
+                        _strKeySn = _str[2];
+                        _strKeyId = _str[3];
+
+                        _strQry = string.Format("Insert Into Reg_{0}(Dong, Ho, Key_Sn, Key_Id, State) values({1},{2},'{3}','{4}',0);"
+                                    , a_strLBName, _strDong, _strHo, _strKeySn, _strKeyId);
+                        m_mysql.MySqlExec(_strQry);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("KeySyncExec() 메소드 예외: " + ex.Message.ToString(), System.Drawing.Color.Red);
+            }
+        }
+
+        ///////////////////////////////////////////////////////////
+        // 키 인증 이벤트
+        private void KeyConfirm(OPDevPtrl a_OpDevData)
+        {
+            try
+            {
+                if (m_strDirectionFlag == "0")
+                {
+                    string _strGid = "", _strDid = "", _strLobbyName = "";
+                    _strGid = a_OpDevData.byData[0].ToString("X2");
+                    _strDid = a_OpDevData.byData[1].ToString("X2");
+                    List<string> _listKeyId = new List<string>();
+
+                    string _strKeyId = "";
+
+                    for (int j = 0; j < 8; j++)
+                        _strKeyId = _strKeyId + a_OpDevData.byData[j + 2].ToString("X2");
+
+                    _listKeyId.Add(_strKeyId);
+                    _strLobbyName = this.GetLobbyName(_strGid, _strDid);
+                    
+                    stCrtCall _stCrtCall = new stCrtCall();
+
+                    _stCrtCall.byUkrGid = a_OpDevData.byData[0];
+                    _stCrtCall.byUkrDid = a_OpDevData.byData[1];
+                    _stCrtCall.byElGid = 0x00;
+                    _stCrtCall.byElDid = 0x00;
+                    _stCrtCall.strKeyId = _strKeyId;
+                    _stCrtCall.nTakeOn = GetTakeOn(_stCrtCall.byUkrGid, _stCrtCall.byUkrDid);
+                    //죽동 현장 현통 목적층 호출이 없는 현장을 위한 임시 코드 추후 예외처리 코딩 필요
+                    _stCrtCall.nTakeOff = GetTakeOff(_stCrtCall.byUkrGid, _stCrtCall.byUkrDid, _stCrtCall.strKeyId);// _stCrtCall.nTakeOn;// GetTakeOff(_stCrtCall.byUkrGid, _stCrtCall.byUkrDid, _stCrtCall.strKeyId);
+                    _stCrtCall.strCarId = GetCarId(_stCrtCall.byUkrGid, _stCrtCall.byUkrDid);
+                    _stCrtCall.nDelayTime = GetDelayTime(_stCrtCall.byUkrGid, _stCrtCall.byUkrDid);
+                    _stCrtCall.bUkrConfirmFlag = false;
+                    _stCrtCall.bElCallFlag = false;
+                    _stCrtCall.bElConfirmFlag = false;
+                    
+                    string _strLog = string.Format("출입 인증({0}): Gid:{1}, Did:{2}, KeyId:{3}", _strLobbyName, _strGid, _strDid, _strKeyId);
+
+                    this.LogPrint(_strLog);
+
+                    // 2020-04-14 한정태 수정(로그 기록남기는 것을 수정함)
+                    // Crt 폴더에 로그 기록을 남김
+                    string _strQry = string.Format("select Dong, Ho from Key_Info_Master where Key_Id = '{0}';", _strKeyId);
+
+                    List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 2);
+
+                    string _strDong = "", _strHo = "";
+                    foreach (string[] _str in _qryList)
+                    {
+                        _strDong = _str[0];
+                        _strHo = _str[1];
+                    }
+                    _strLog = string.Format("출입 인증({0}): Gid:{1}, Did:{2}, KeyId:{3}, Dong = {4}, Ho = {5} ", _strLobbyName, _strGid, _strDid, _strKeyId, _strDong, _strHo);
+                    this.LogSave(_strLog);
+
+                    Thread _h = new Thread(new ParameterizedThreadStart(CrtCall));
+
+                    _h.IsBackground = true;
+
+                    _h.Start(_stCrtCall);
+                }
+                /////////////////////////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////
+                // 엘리베이터 리더기가 있어 방향을 체크할 때 사용하는코드
+                else if (m_strDirectionFlag == "1")
+                {
+                    //1. 방향체크
+                    // 인증 키 아이디
+                    string _strKeyId = "";
+
+                    for (int i = 0; i < 8; i++)
+                        _strKeyId = _strKeyId + a_OpDevData.byData[i + 2].ToString("X2");
+
+                    // 인증된 공동현관 정보를 찾는다
+                    for (int i = 0; i < m_listCrtCallInfo.Count; i++)
+                    {
+                        if (a_OpDevData.byData[0] != m_listCrtCallInfo[i].byUkrGid)
+                            continue;
+
+                        // 인증된 공동현관이 엘리베이터용 인지 출입구 용인지 확인 한다
+                        if (m_listCrtCallInfo[i].bElUse == true)
+                        {
+                            this.LogPrint("출입구용 리더기");
+                            
+                            // 출입구용 리더기 일 경우
+                            // 연동되는 엘리베이터용 리더기를 찾는다.
+                            for (int j = 0; j < m_listCrtCallInfo.Count; j++)
+                            {
+                                if (m_listCrtCallInfo[i].byElGid != m_listCrtCallInfo[j].byUkrGid)
+                                    continue;
+
+                                // 엘리베이터용 리더기에 인증된 키 아이디가 있는지 확인 한다.
+                                for (int k = 0; k < m_listCrtCallInfo[j].KeyId.Count; k++)
+                                {
+                                    // 인증된 아이디가 있으면
+                                    // 키를 삭제하고
+                                    // 외출 중 이므로 호출 하지 않는다.
+                                    if (m_listCrtCallInfo[j].KeyId[k] == _strKeyId)
+                                    {
+                                        m_listCrtCallInfo[j].KeyId.RemoveAll(x => x.Equals(_strKeyId));
+                                        return;
+                                    }
+                                }
+                                // 인증된 아이디가 있는 경우
+                                // 엘리베이터를 호출
+                                // 들어오고 있는 중이면 엘리베이터 호출을 한다.
+                                stCrtCall _stCrtCall = new stCrtCall();
+
+                                _stCrtCall.byUkrGid = a_OpDevData.byData[0];
+                                _stCrtCall.byUkrDid = a_OpDevData.byData[1];
+                                _stCrtCall.byElGid = 0x00;
+                                _stCrtCall.byElDid = 0x00;
+                                _stCrtCall.strKeyId = _strKeyId;
+                                _stCrtCall.nTakeOn = GetTakeOn(_stCrtCall.byUkrGid, _stCrtCall.byUkrDid);
+                                //죽동 현장 현통 목적층 호출이 없는 현장을 위한 임시 코드 추후 예외처리 코딩 필요
+                                _stCrtCall.nTakeOff = GetTakeOff(_stCrtCall.byUkrGid, _stCrtCall.byUkrDid, _stCrtCall.strKeyId);// _stCrtCall.nTakeOn;// GetTakeOff(_stCrtCall.byUkrGid, _stCrtCall.byUkrDid, _stCrtCall.strKeyId);
+                                _stCrtCall.strCarId = GetCarId(_stCrtCall.byUkrGid, _stCrtCall.byUkrDid);
+                                _stCrtCall.nDelayTime = GetDelayTime(_stCrtCall.byUkrGid, _stCrtCall.byUkrDid);
+                                _stCrtCall.bUkrConfirmFlag = false;
+                                _stCrtCall.bElCallFlag = false;
+                                _stCrtCall.bElConfirmFlag = false;
+
+                                string _strGid = a_OpDevData.byData[0].ToString("X2");
+                                string _strDid = a_OpDevData.byData[1].ToString("X2");
+
+                                string _strLog = string.Format("출입 인증({0}): Gid:{1}, Did:{2}, KeyId:{3}", GetLobbyName(_strGid, _strDid), _strGid, _strDid, _strKeyId);
+
+                                this.LogPrint(_strLog);
+
+                                Thread _h = new Thread(new ParameterizedThreadStart(CrtCall));
+
+                                _h.IsBackground = true;
+
+                                _h.Start(_stCrtCall);
+                            }
+                        }
+                        else
+                        {
+                            // 엘리베이터용 리더기 일 경우
+                            // 인증된 키 아이디를 리스트에 저장한다.
+                            this.LogPrint(string.Format("엘리베이터용 리더기 / {0}", a_OpDevData.byData[0]));
+                            m_listCrtCallInfo[i].KeyId.Add(_strKeyId);
+
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("KeyConfirm()에서 예외 발생 : " + ex.Message.ToString());
+            }
+        }
+
+        private bool IsElConfirm(byte a_byGid, byte a_byDid)
+        {
+            bool _bRet = false;
+            byte _byElGid = 0, _byElDid = 0;
+
+            for (int i = 0; i < m_listCrtCallInfo.Count; i++)
+            {
+                stCrtCallInfo _st = new stCrtCallInfo();
+                _st = m_listCrtCallInfo[i];
+
+                if ((_st.byUkrGid == a_byGid) &&
+                    (_st.byUkrDid == a_byDid))
+                {
+                    _byElGid = _st.byElGid;
+                    _byElDid = _st.byElDid;
+                    break;
+                }
+            }
+
+            foreach (stKeyDirection _st in m_listKeyDirection)
+            {
+                if ((_st.byElGid == _byElGid) &&
+                    (_st.byElDid == _byElDid))
+                {
+                    _bRet = true;
+                }
+            }
+
+            return _bRet;
+        }
+
+        private bool IsUkrConfirm(byte a_byGid, byte a_byDid)
+        {
+            bool _bRet = false;
+            byte _byUkrGid = 0, _byUkrDid = 0;
+
+            for (int i = 0; i < m_listCrtCallInfo.Count; i++)
+            {
+                stCrtCallInfo _st = new stCrtCallInfo();
+                _st = m_listCrtCallInfo[i];
+
+                if ((_st.byElGid == a_byGid) &&
+                    (_st.byElDid == a_byDid))
+                {
+                    _byUkrGid = _st.byUkrGid;
+                    _byUkrDid = _st.byUkrDid;
+                    break;
+                }
+            }
+
+            foreach (stKeyDirection _st in m_listKeyDirection)
+            {
+                if ((_st.byUkrGid == _byUkrGid) &&
+                    (_st.byUkrDid == _byUkrDid))
+                {
+                    _bRet = true;
+                }
+            }
+
+            return _bRet;
+        }
+
+        private stCrtCall GetCrtCall(stCrtCallInfo a_stCrtCallInfo, byte[] byData)
+        {
+            stCrtCall _stCrtCall = new stCrtCall();
+            _stCrtCall.strArKeyId = new string[(byData.Length - 2) / 8];
+
+            _stCrtCall.byUkrGid = a_stCrtCallInfo.byUkrGid;
+            _stCrtCall.byUkrDid = a_stCrtCallInfo.byUkrDid;
+            _stCrtCall.strCarId = a_stCrtCallInfo.strCrtId; // 호기 정보
+
+            string _strKeyId = "";  // 키정보
+            for (int i = 0; i < (byData.Length - 2) / 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    _strKeyId = _strKeyId + byData[(i * 8) + (j + 2)].ToString("X2");
+                }
+
+                _stCrtCall.strArKeyId[i] = _strKeyId;
+
+                _strKeyId = "";
+                _stCrtCall.nKeyCnt++;
+            }
+
+            //////////////////////////////////////////////////////////////////////////////////
+            // 탑승층
+            _stCrtCall.nTakeOn = GetTakeOn(a_stCrtCallInfo);
+
+            //////////////////////////////////////////////////////////////////////////////////
+            // 목적층
+            _stCrtCall.nArTakeOff = GetTakeOff(_stCrtCall);
+
+            return _stCrtCall;
+        }
+
+        //////////////////////////////////////
+        // 탑승층 찾기
+        private int GetTakeOn(stCrtCallInfo a_stCrtCallInfo)
+        {
+            string _strTakeOn = "", _strCarConfig = "";
+            string _strQry = string.Format("select Take_On, Car_Config from Lobby_Crt_Info where UKR_GID = '{0}' and UKR_DID = '{1}';", a_stCrtCallInfo.byUkrGid.ToString("X2"), a_stCrtCallInfo.byUkrDid.ToString("X2"));
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 2);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strTakeOn = _str[0];
+                _strCarConfig = _str[1];
+            }
+
+            string[] _strArFloor = GetArFloor(_strCarConfig);
+
+            int _nRet = 0;
+            for (int i = 0; i < _strArFloor.Length; i++)
+            {
+                _nRet++;
+                if (_strTakeOn == _strArFloor[i])
+                {
+                    break;
+                }
+            }
+
+            return _nRet;
+        }
+
+        private int GetTakeOn(byte a_byGid, byte a_byDid)
+        {
+            string _strTakeOn = "", _strCarConfig = "";
+            string _strQry = string.Format("select Take_On, Car_Config from Lobby_Crt_Info where UKR_GID = '{0}' and UKR_DID = '{1}';", a_byGid.ToString("X2"), a_byDid.ToString("X2"));
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 2);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strTakeOn = _str[0];
+                _strCarConfig = _str[1];
+            }
+
+            string[] _strArFloor = GetArFloor(_strCarConfig);
+
+            int _nRet = 0;
+            for (int i = 0; i < _strArFloor.Length; i++)
+            {
+                _nRet++;
+                if (_strTakeOn == _strArFloor[i])
+                {
+                    break;
+                }
+            }
+
+            return _nRet;
+        }
+
+        //////////////////////////////////////
+        // 엘리베이터 층구성 배열 분할
+        private string[] GetArFloor(string a_strCarConfig)
+        {
+            string[] _ar = a_strCarConfig.Split('-');
+            return _ar;
+        }
+
+        //////////////////////////////////////
+        // 목적층 찾기
+        private int[] GetTakeOff(stCrtCall a_stCrtCall)
+        {
+            string _strQry = "", _strHo = "", _strCarConfig = ""; ;
+            int[] _nRet = { 0, };
+            int _nLoop = 0;
+
+            for (int i = 0; i < a_stCrtCall.nKeyCnt; i++)
+            {
+                _nLoop = 0;
+                _strQry = string.Format("select Ho from Key_Info_Master where Key_Id = '{0}';", a_stCrtCall.strArKeyId[i]);
+
+                List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+                foreach (string[] _str in _qryList)
+                {
+                    _strHo = _str[0];
+                }
+
+                _strQry = string.Format("SELECT Car_Config FROM Lobby_Crt_Info WHERE UKR_GID = '{0}' and UKR_DID = '{1}';", a_stCrtCall.byUkrGid.ToString(), a_stCrtCall.byUkrDid.ToString());
+
+                _qryList.Clear();
+                _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+                foreach (string[] _str in _qryList)
+                {
+                    _strCarConfig = _str[0];
+                }
+
+                string[] _strArFloor = GetArFloor(_strCarConfig);
+
+                for (int j = 0; j < _strArFloor.Length; j++)
+                {
+                    _nLoop++;
+                    if ((int.Parse(_strHo) / 100).ToString() == _strArFloor[j])
+                    {
+                        break;
+                    }
+                }
+
+                _nRet[i] = _nLoop;
+            }
+
+            return _nRet;
+        }
+
+        private int GetTakeOff(byte a_byGid, byte a_byDid, string a_strKeyId)
+        {
+            if (m_strTakeOffFlag == "0")   // 목적층을 사용하지 않음
+                return 0;
+
+            string _strQry = "", _strHo = "", _strCarConfig = ""; ;
+            int _nRet = 0, _nLoop = 0;
+
+            _nLoop = 0;
+            _strQry = string.Format("select Ho from Key_Info_Master where Key_Id = '{0}';", a_strKeyId);
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strHo = _str[0];
+            }
+
+            _strQry = string.Format("select Car_Config from Lobby_Crt_Info where UKR_GID = '{0}' and UKR_DID = '{1}';", a_byGid.ToString("X2"), a_byDid.ToString("X2"));
+
+            _qryList.Clear();
+            _qryList = m_mysql.MySqlSelect(_strQry, 1);
+
+            foreach (string[] _str in _qryList)
+            {
+                _strCarConfig = _str[0];
+            }
+
+            string[] _strArFloor = GetArFloor(_strCarConfig);
+
+            for (int j = 0; j < _strArFloor.Length; j++)
+            {
+                _nLoop++;
+                if ((int.Parse(_strHo) / 100).ToString() == _strArFloor[j])
+                {
+                    break;
+                }
+            }
+
+            _nRet = _nLoop;
+
+            return _nRet;
+        }
+
+        ///////////////////////////////////////////////////
+        // 엘리베이터 호기 찾기
+        private string GetCarId(byte a_byGid, byte a_byDid)
+        {
+            string _strCarId = "";
+            for (int i = 0; i < m_listCrtCallInfo.Count; i++)
+            {
+                stCrtCallInfo _st = m_listCrtCallInfo[i];
+
+                if ((_st.byUkrGid == a_byGid) &&
+                    (_st.byUkrDid == a_byDid))
+                {
+                    _strCarId = _st.strCrtId; // 호기 정보
+                    break;
+                }
+            }
+            return _strCarId;
+        }
+
+        private int GetDelayTime(byte a_byGid, byte a_byDid)
+        {
+            int  delayTime = 0;
+
+            for (int i = 0; i < m_listCrtCallInfo.Count; i++)
+            {
+                stCrtCallInfo _st = m_listCrtCallInfo[i];
+
+                if ((_st.byUkrGid == a_byGid) &&
+                    (_st.byUkrDid == a_byDid))
+                {
+                    return delayTime = _st.nDelayTime; // 호출 딜레이
+                }
+            }
+            return delayTime;
+        }
+
+        ///////////////////////////////////////////////////
+        // 엘리베이터 호기 찾기
+        private void GetDongHo(string a_strKeyID, ref int a_nDong, ref int a_nHo)
+        {
+            string _strQry = "";
+            _strQry = string.Format("SELECT Dong,Ho from Key_Info_Master where Key_Id = '{0}';", a_strKeyID);
+
+            List<string[]> _qryList = m_mysql.MySqlSelect(_strQry, 2);
+
+            foreach (string[] _str in _qryList)
+            {
+                a_nDong = int.Parse(_str[0]);
+                a_nHo = int.Parse(_str[1]);
+            }
+        }
+
+        private void CrtCall(object a_o)
+        {
+            stCrtCall _stCrtCall = (stCrtCall)a_o;
+
+            string[] strCrtId = _stCrtCall.strCarId.Split('-');
+
+            Thread.Sleep(_stCrtCall.nDelayTime);
+
+            bool _bCrtCallRet = false;
+
+            int nDong = 0;
+            int nHo = 0;
+
+            for (int i = 0; i < strCrtId.Length; i++)
+            {
+                //현대 통신 버젼
+                try
+                {
+                    switch (m_CrtType)
+                    {
+                        case "OTS":
+                            {
+                                //OTIS버젼
+                                GetDongHo(_stCrtCall.strKeyId, ref nDong, ref nHo);
+                                _bCrtCallRet = m_hCrt.CrtCall(nDong, nHo, Convert.ToByte(_stCrtCall.nTakeOn), Convert.ToByte(_stCrtCall.nTakeOff), _stCrtCall.nDelayTime);
+                                break;
+                            }
+                        case "Hyundai":
+                            {
+                                int car = int.Parse(strCrtId[i]);
+                                GetDongHo(_stCrtCall.strKeyId, ref nDong, ref nHo);
+
+                                // CRT서버가 한대 인 경우
+                                if (m_nCrtSubUse == 0)
+                                {
+                                    _bCrtCallRet = m_hCrt.CrtCall(nDong, nHo, Convert.ToByte(car), Convert.ToByte(_stCrtCall.nTakeOn), Convert.ToByte(_stCrtCall.nTakeOff));
+                                    break;
+                                }
+                                else
+                                {
+                                    if (car < m_nCrtSubCaStart)
+                                        _bCrtCallRet = m_hCrt.CrtCall(nDong, nHo, Convert.ToByte(car), Convert.ToByte(_stCrtCall.nTakeOn), Convert.ToByte(_stCrtCall.nTakeOff));
+                                    else
+                                    {
+                                        // car : 23 / carstart = 23
+                                        // 보조 CRT의 1번 호출
+                                        // car = (car+1) - carstart
+                                        // car = (23+1) - 23 = 1
+                                        car = (car+1) - m_nCrtSubCaStart;
+                                        _bCrtCallRet = m_hCrtSub.CrtCall(Convert.ToByte(car), Convert.ToByte(_stCrtCall.nTakeOn), Convert.ToByte(_stCrtCall.nTakeOff));
+                                    }
+                                }
+                                break;
+                            }
+                        case "Thyssen":
+                            {
+                                GetDongHo(_stCrtCall.strKeyId, ref nDong, ref nHo);
+                                _bCrtCallRet = m_hCrt.CrtCall(nDong, nHo, Convert.ToByte(int.Parse(strCrtId[i])), Convert.ToByte(_stCrtCall.nTakeOn), Convert.ToByte(_stCrtCall.nTakeOff), _stCrtCall.nDelayTime);
+                                break;
+                            }
+                        case "Power":
+                            {
+                                //OTIS와 프로토콜 형태 동일
+                                GetDongHo(_stCrtCall.strKeyId, ref nDong, ref nHo);
+                                _bCrtCallRet = m_hCrt.CrtCall(nDong, nHo, Convert.ToByte(_stCrtCall.nTakeOn), Convert.ToByte(_stCrtCall.nTakeOff), _stCrtCall.nDelayTime);
+                                break;
+                            }
+                        case "Han" :
+                            {
+                                GetDongHo(_stCrtCall.strKeyId, ref nDong, ref nHo);
+                                _bCrtCallRet = m_hCrt.CrtCall(nDong, nHo, Convert.ToByte(int.Parse(strCrtId[i])), Convert.ToByte(_stCrtCall.nTakeOn), Convert.ToByte(_stCrtCall.nTakeOff));
+                                break;
+                            }
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    LogPrint("CrtCall() 예외 발생:" + ex.Message.ToString());
+                }
+                Thread.Sleep(100);
+            }
+            if (_bCrtCallRet)
+            {
+                LogPrint(m_CrtType + " / On :" + _stCrtCall.nTakeOn + " / Off :" + _stCrtCall.nTakeOff);
+            }
+            else
+            {
+                // Crt 서버에 접속 불량시 로그 출력 후 재접속
+                LogPrint(m_CrtType + " Crt 서버 접속 불량(E/V 호출 실패)");
+                m_hCrt.CrtConnection();
+            }
+
+            lock (m_listCrtCall)
+            {
+                m_listCrtCall.Remove(_stCrtCall);
+
+            }
+
+            // 구조체 초기화
+            if ((_stCrtCall.bElCallFlag == true) &&
+                (_stCrtCall.bElConfirmFlag == true) &&
+                (_stCrtCall.bUkrConfirmFlag == true))
+            {
+                m_listCrtCall.Remove(_stCrtCall);
+            }
+        }
+
+        public void LogPrint(string a_strLog)
+        {
+            string _strTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+            ListViewItem _lvi = new ListViewItem("");
+            _lvi.SubItems.Add(_strTime);
+            _lvi.SubItems.Add(a_strLog);
+
+            lv_evt_log.InvokeIfNeeded(() => lv_evt_log.Items.Insert(0, _lvi));
+            this.LogMainListSave(_strTime + "       " + a_strLog);
+
+            Console.WriteLine(a_strLog);
+        }
+
+        public void LogSave(string a_strLog)
+        {
+            //DB및 파일 저장
+            m_logCrt.SetLogFile("Crt", a_strLog);
+        }
+
+        public void LogMainListSave(string a_strLog)
+        {
+            m_logMainList.SetLogFile("", a_strLog);
+        }
+
+        private void btn_keyId_list_del_Click(object sender, EventArgs e)
+        {
+            int nLoop = 0;
+
+            lv_key_info.InvokeIfNeeded(() => nLoop = lv_key_info.Items.Count);
+
+
+            for (int i = 0; i < nLoop; i++)
+            {
+                bool _bFlag = false;
+                lv_key_info.InvokeIfNeeded(() => _bFlag = lv_key_info.Items[i].Checked);
+
+                if (_bFlag)
+                {
+                    lv_key_info.InvokeIfNeeded(() => lv_key_info.Items[i].Remove());
+                    lv_key_info.InvokeIfNeeded(() => nLoop = lv_key_info.Items.Count);
+                    i = -1;
+                }
+            }
+        }
+
+        private void ToolStripMenuItem_ReLoad_Click(object sender, EventArgs e)
+        {
+            LoadConfig();
+        }
+
+        private void ToolStripMenuItem_CrtReConnection_Click(object sender, EventArgs e)
+        {
+            //////////////////////////////////////////////////////
+            // Crt 서버 접속
+            if (m_hCrt.CrtConnection(m_strCrtIp, m_nCrtPort))
+                this.LogPrint("엘리베이터 서버 접속 성공:" + "IP:" + m_strCrtIp + ", Port: " + m_nCrtPort.ToString());
+            else
+                this.LogPrint("엘리베이터 서버 접속 실패: " + "IP:" + m_strCrtIp + ", Port: " + m_nCrtPort.ToString());
+
+            if (m_hCrtSub == null)
+                return;
+
+            if (m_hCrtSub.CrtConnection(m_strCrtSubIp, m_nCrtSubPort))
+                this.LogPrint("엘리베이터 서버 접속 성공:" + "IP:" + m_strCrtSubIp + ", Port: " + m_nCrtSubPort.ToString());
+            else
+                this.LogPrint("엘리베이터 서버 접속 실패: " + "IP:" + m_strCrtSubIp + ", Port: " + m_nCrtSubPort.ToString());
+        }
+
+        private void LoadConfig()
+        {
+            string[] lines = System.IO.File.ReadAllLines(@".\Config.ini");
+
+            foreach (string _line in lines)
+            {
+                string[] _str = _line.Split('=');
+
+                string _case = _str[0].ToLower();
+
+                switch (_case)
+                {
+                    case "dbip":
+                        this.DBIp = _str[1];
+                        break;
+                    case "crt":
+                        m_CrtType = _str[1];
+                        break;
+                    case "crtip":
+                        m_strCrtIp = _str[1];
+                        break;
+                    case "subcrtuse":
+                        m_nCrtSubUse        = int.Parse(_str[1]);
+                        break;
+                    case "subip":
+                        m_strCrtSubIp       = _str[1];
+                        break;
+                    case "crtport":
+                        m_nCrtPort          = int.Parse(_str[1]);
+                        break;
+                    case "subport":
+                        m_nCrtSubPort       = int.Parse(_str[1]);
+                        break;
+                    case "subcarstart":
+                        m_nCrtSubCaStart    = int.Parse(_str[1]);
+                        break;
+                    case "carcount":
+                        m_nCarCount         = int.Parse(_str[1]);
+                        break;
+                    case "direction_set":
+                        m_strDirectionFlag  = _str[1];
+                        break;
+                    case "takeoff_set":
+                        m_strTakeOffFlag    = _str[1];
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            //Clear All Socket
+            foreach (DevInfo devInfo in m_listUkrInfo)
+                devInfo.socket.Close();
+        }
+
+        private void lv_lb_master_ItemActivate(object sender, EventArgs e)
+        {
+            txt_reg_dong.Text = lv_lb_master.SelectedItems[0].SubItems[1].Text;
+            txt_reg_ho.Text = lv_lb_master.SelectedItems[0].SubItems[2].Text;
+            txt_reg_keysn.Text = lv_lb_master.SelectedItems[0].SubItems[3].Text;
+            txt_reg_keyid.Text = lv_lb_master.SelectedItems[0].SubItems[4].Text;
+        }
+
+        private void 삭제ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // string _strQry = "";
+
+            if (contextMenuStrip.SourceControl == lv_lb_reg)
+            {
+                if (lv_lb_reg.SelectedItems.Count != 0)
+                {
+                    //Console.WriteLine(lv_lb_info.Items[3].SubItems[1].Text);
+                    //Console.WriteLine(lv_lb_reg.SelectedItems[0].SubItems[1].Text);
+                    //Console.WriteLine(lv_lb_reg.SelectedItems[0].SubItems[2].Text);
+                    //Console.WriteLine(lv_lb_reg.SelectedItems[0].SubItems[3].Text);
+                    //Console.WriteLine(lv_lb_reg.SelectedItems[0].SubItems[4].Text);
+                    //_strQry = "DELETE FROM " + lv_lb_info.Items[3].SubItems[1].Text + " WHERE gg;";
+                }
+            }
+            else if (contextMenuStrip.SourceControl == lv_lb_del)
+            {
+                if (lv_lb_del.SelectedItems.Count != 0)
+                {
+                    //Console.WriteLine(lv_lb_info.Items[4].SubItems[1].Text);
+                    //Console.WriteLine(lv_lb_del.SelectedItems[0].SubItems[1].Text);
+                    //Console.WriteLine(lv_lb_del.SelectedItems[0].SubItems[2].Text);
+                    //Console.WriteLine(lv_lb_del.SelectedItems[0].SubItems[3].Text);
+                    //Console.WriteLine(lv_lb_del.SelectedItems[0].SubItems[4].Text);
+                    //_strQry = "SELECT Dong FROM kms.Dong_Lobby group by Dong;";
+                }
+            }
+        }
+
+        private void 전체삭제ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (contextMenuStrip.SourceControl == lv_lb_reg)
+            {
+            }
+            else if (contextMenuStrip.SourceControl == lv_lb_del)
+            {
+            }
+        }
+
+        // 리셋 정보 불러 오기
+        private void ToolReset_Click(object sender, EventArgs e)
+        {
+            FormReset reset = new FormReset( this );
+
+            reset.SetMySql(m_mysql);
+
+            reset.SetDevice(m_listUkrInfo);
+
+            reset.ShowDialog();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Console.WriteLine("Connection Test");
+
+            if (m_hCrt.IsCrtConnected())
+            {
+                Console.WriteLine("m_hCrt.IsCrtConnect() = true");
+            }
+            else
+            {
+                Console.WriteLine("m_hCrt.IsCrtConnect() = false");
+            }
+        }
+
+        private void KeyDeleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // 2020-04-14 키삭제 루틴 추가
+            // 기존에 MainForm에서 키 삭제를 할 수 있는 루틴을 메뉴로 뺌
+            FormKeyDelete _frmKeyDelete = new FormKeyDelete();
+            _frmKeyDelete.ShowDialog();
+        }
+
+        private void TypeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FormType _frmType = new FormType();
+            _frmType.Show();
+        }
+    }
+
+    public static class ControlExtensions
+    {
+        public static void InvokeIfNeeded(this Control control, Action action)
+        {
+            if (control.InvokeRequired)
+                control.Invoke(action);
+            else
+                action();
+        }
+
+        public static void InvokeIfNeeded<T>(this Control control, Action<T> action, T arg)
+        {
+            if (control.InvokeRequired)
+                control.Invoke(action, arg);
+            else
+                action(arg);
+        }
+    }
+
+    class Log
+    {
+        private DateTime date;
+        string strFilePath;
+
+        public Log()
+        {
+            date = DateTime.Now;
+            strFilePath = Application.StartupPath + "\\Log\\";
+            CreateDirectory(strFilePath);
+        }
+
+        public Log(string a_strFilePath)
+        {
+            date = DateTime.Now;
+            strFilePath = Application.StartupPath + "\\" + a_strFilePath + "\\";
+            CreateDirectory(strFilePath);
+        }
+
+        private void CreateDirectory(string strDirName)
+        {
+            DirectoryInfo dir = new DirectoryInfo(strDirName);
+
+            if (dir.Exists == false)
+                dir.Create();
+        }
+
+        public void SetLogFile(string a_strName, string a_strLog)
+        {
+            // 2020-04-14 Log 파일 저장시 파일 예외 발생으로 Program Down ==> try Catch 적용
+            try
+            {
+                date = DateTime.Now;
+                string strFileNmae = strFilePath + date.ToShortDateString() + ".txt";
+
+                StreamWriter sw = new StreamWriter(strFileNmae, true);
+                sw.Write("[" + date.ToLongTimeString() + "]" + a_strName + " :: " + a_strLog + "\r\n");
+                sw.Close();
+            }
+            catch
+            {
+            }
+        }
+    }
+}

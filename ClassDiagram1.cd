@@ -1,0 +1,436 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="SmartOnePass.CallBack" Collapsed="true">
+    <Position X="0.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAIAAgAAAAAAAAAAAIAAAAgAAAAEAABEAAAAAAAAQ=</HashCode>
+      <FileName>CallBack.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.Crt_Hyundai" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CRT\Crt_Hyundai.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.Crt_Hyundai_High" Collapsed="true">
+    <Position X="2.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CRT\Crt_Hyundai_High.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.Crt_Mitsubishi" Collapsed="true">
+    <Position X="5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAIAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CRT\Crt_Mitsubishi.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.Crt_OTS" Collapsed="true">
+    <Position X="7.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAAAIAgAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CRT\Crt_OTS.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.Crt_Power" Collapsed="true">
+    <Position X="9.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAAAIAgAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CRT\Crt_Power.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.CustomImageGroupBox" Collapsed="true">
+    <Position X="7.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAgAAAAAACAAAAAAgAAAAIAAABAEAwEAAIA=</HashCode>
+      <FileName>CustomImageGroupBox.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.CustomRoundButton" Collapsed="true">
+    <Position X="9.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAQAAAAAAAAAACgIAAEAAAAQAAAAUCAEAAAAAAAA=</HashCode>
+      <FileName>CustomRoundButton.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.CustomRoundGroupBox" Collapsed="true">
+    <Position X="11" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAQAAAAAAAAAACgIAAEAAAAAAAAAUCAEAAAAAAAA=</HashCode>
+      <FileName>CustomRoundGroupBox.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.DualiControl" Collapsed="true">
+    <Position X="2.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACEQwBAQEBgAEEBECACBgQQYIAAAAABgAuAAABA=</HashCode>
+      <FileName>DualiControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormConfigInit" Collapsed="true">
+    <Position X="4" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAICAAABAAAACAAADCEwAAAAAAAAAIAIBQAAA=</HashCode>
+      <FileName>FormConfigInit.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormCrtCall" Collapsed="true">
+    <Position X="5.75" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAIEAEAMDBCEBAUAADAMJECDAAAAAAAAAAQAEAAAAQ=</HashCode>
+      <FileName>FormCrtCall.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormCrtCallLog" Collapsed="true">
+    <Position X="7.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAUACAKDRCABAQAADAAAH6CwCAAAAAAAAYAAASAAQ=</HashCode>
+      <FileName>FormCrtCallLog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormDevLog" Collapsed="true">
+    <Position X="9.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAUACAKDRCABAQAADAAAHCCwCAAAAQAAAYAAAQAAQ=</HashCode>
+      <FileName>FormDevLog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormKeyDelete" Collapsed="true">
+    <Position X="11" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQACAAAoCAgCBAChhjCARDCI1JFBKCAYCBIBAgQABA=</HashCode>
+      <FileName>FormKeyDelete.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormMain">
+    <Position X="13" Y="7.25" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>9z+F927s/Hr62dXf5PTqp/ve4/7XP+nd61de3t776hs=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormPassword" Collapsed="true">
+    <Position X="2.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BCBAAAANEDAAABACQACAAAAOACAAAAEAAAEAEAAIAAA=</HashCode>
+      <FileName>FormPassword.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormRegDelLog" Collapsed="true">
+    <Position X="4" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAUACAKDRCIBAQAADAAIH6CwCAAAAAAAAYAAAQAAQ=</HashCode>
+      <FileName>FormRegDelLog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormRegKeyAll" Collapsed="true">
+    <Position X="5.75" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQBIAKCAACAAABARAIKAEBYyAAABAIAAEKIAAERCAAg=</HashCode>
+      <FileName>FormRegKeyAll.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormReset" Collapsed="true">
+    <Position X="7.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EkIAAAQQACkAAJAwIkHYBFEaSCQArCCEAxDjBEJYAIA=</HashCode>
+      <FileName>FormReset.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormSensitivity" Collapsed="true">
+    <Position X="9.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAEAEAMAIDQQAJIQAgXAAADyDwJAAAAQAABKAIQYQBA=</HashCode>
+      <FileName>FormSensitivity.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormSyncInfo" Collapsed="true">
+    <Position X="11" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IFIAAICSBCACAhAQAEDAIQACDyBAQAYAAQQQAoEBAAA=</HashCode>
+      <FileName>FormSyncInfo.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.FormType" Collapsed="true">
+    <Position X="0.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAAACAAAAAQAACAAAACAABIAQAAUGAAAAAAIAA=</HashCode>
+      <FileName>FormType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.ConstructionCompany" Collapsed="true">
+    <Position X="4" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>FormType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.MySqlDB" Collapsed="true">
+    <Position X="9.25" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAAAAAABEIAAAAAAAAAAACIAAAAQAiA=</HashCode>
+      <FileName>MySqlDB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.Networkcs" Collapsed="true">
+    <Position X="11" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>DABABAAARAEACgAAACAAEAyICAKACZAACAATAgQAAAA=</HashCode>
+      <FileName>Networkcs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.OPProtocal" Collapsed="true">
+    <Position X="0.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABAAAAABABAAAAAAQAAAAAAAAAAAAAAACAAA=</HashCode>
+      <FileName>OPProtocal.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.PtrlEventArgs" Collapsed="true">
+    <Position X="5.75" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAA=</HashCode>
+      <FileName>OPProtocal.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.ProcessChecker" Collapsed="true">
+    <Position X="2.25" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAgAAAA=</HashCode>
+      <FileName>ProcessChecker.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.DevInfo" Collapsed="true">
+    <Position X="0.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAABAAAAAAAAAAAIAAAAAAAAAABAAAAAAEAAAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.LobbyBtnInfo" Collapsed="true">
+    <Position X="5.75" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAIAAAAAAAAAAAAAAAABAAAABAEAAAAAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.LobbyBtnGroupPos" Collapsed="true">
+    <Position X="4" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAQAAAAAAAAAAAAABAAAAAAAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.Program" Collapsed="true">
+    <Position X="4" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>NLEARMAAF9AOgGBNTAjBkEIQCJJhy16TSwAqDZEQhjc=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.ResetTimer" Collapsed="true">
+    <Position X="7.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAABAAQAAAAAAAACAAGYAAAIBAAAAAQBAA=</HashCode>
+      <FileName>ResetTimer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.UC_ListView" Collapsed="true">
+    <Position X="2.25" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAEEMCAIADABACSAAAAmAAAAAAAQAAAIAIAQAAA=</HashCode>
+      <FileName>UC_Listview.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.UC_Map" Collapsed="true">
+    <Position X="4" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAwAAAACBAAAAAEBCAAAEGAAQAwCAAAQAAAAAAEAA=</HashCode>
+      <FileName>UC_Map.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CheckNetControl.CheckStatus" Collapsed="true">
+    <Position X="2.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAIAAIAAACAAAAAAAAEAAAAAAAAIABAAAAIAA=</HashCode>
+      <FileName>CheckStatus.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.CRT.Crt_ThyssenKrupp" Collapsed="true">
+    <Position X="11.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAEAAAAABAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CRT\Crt_ThyssenKrupp.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.CRT.CRTBase" Collapsed="true">
+    <Position X="6" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAkAAAAEAAQAAIAAABAAAABBAACBAAGAAAAEAAQAAAQ=</HashCode>
+      <FileName>CRT\CRTBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CST.Utill.JsonSerializer" Collapsed="true">
+    <Position X="2.25" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAAAAAAAAAAAAAAAAACBAAAAAYAAAAAAAAgA=</HashCode>
+      <FileName>JsonSerializer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.Properties.Resources" Collapsed="true">
+    <Position X="9.25" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>kuBTIGoRWQEABNLGJ1VRWARCEQNaAAsoABUQBAGzAoA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.Properties.Settings">
+    <Position X="11" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.UkrState" Collapsed="true">
+    <Position X="7.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.UkrRegDelCheck" Collapsed="true">
+    <Position X="5.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.TimerUkrReset" Collapsed="true">
+    <Position X="0.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.ControlExtensions" Collapsed="true">
+    <Position X="5.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmartOnePass.Log" Collapsed="true">
+    <Position X="7.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="SmartOnePass.stLobbyId" Collapsed="true">
+    <Position X="5.75" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.stKeyDirection" Collapsed="true">
+    <Position X="11" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.stCrtCall" Collapsed="true">
+    <Position X="7.5" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.stCrtCallInfo" Collapsed="true">
+    <Position X="9.25" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.stStateInfo" Collapsed="true">
+    <Position X="9.25" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.stKeyInfo" Collapsed="true">
+    <Position X="0.5" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.stKmsDBKeyId" Collapsed="true">
+    <Position X="2.25" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.stKmsDBKeyIdInfo" Collapsed="true">
+    <Position X="4" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.stUksKeyCount" Collapsed="true">
+    <Position X="11" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.stRegisterKeyId" Collapsed="true">
+    <Position X="7.5" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FormMain.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.RESET_DATA" Collapsed="true">
+    <Position X="5.75" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABJQaAABAAACAQAAAAQAAAAAAAAQAIAAAAAAAAAAA=</HashCode>
+      <FileName>FormReset.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.OPDevPtrl" Collapsed="true">
+    <Position X="4" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAARAAAAAAAAAAAAAAAIBBAAIAAAAAAQAEAAAAAAAA=</HashCode>
+      <FileName>OPProtocal.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.CRT.CRT_CALL" Collapsed="true">
+    <Position X="0.5" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAQAAIAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CRT\CRTBase.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SmartOnePass.CRT.CRT_STATE" Collapsed="true">
+    <Position X="2.25" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAgAAAAAAgAACAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>CRT\CRTBase.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Enum Name="SmartOnePass.CRT.CRT_TYPE" Collapsed="true">
+    <Position X="0.5" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAAAEAABAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CRT\CRTBase.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="맑은 고딕" Size="9" />
+</ClassDiagram>

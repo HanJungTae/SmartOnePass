@@ -1,0 +1,42 @@
+﻿using System;
+using System.Windows.Forms;
+using System.Net.Sockets;
+
+namespace OnePass
+{
+    public class DevInfo
+    {
+        public Socket socket;
+        public byte byGid;
+        public byte byDid;
+        public int nStateCnt;
+        public bool bReset;
+        public string LobbyName;
+    }
+
+    static class Program
+    {
+        public delegate void KeyConfirm(OPDevPtrl a_OpDevData);
+
+        public static KeyConfirm g_fnKeyConfirm;
+
+        public static Boolean g_bpassword = false;
+
+        /// <summary>
+        /// 해당 응용 프로그램의 주 진입점입니다.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new FormMain());
+        }
+
+        // 현재 Crt 서버에 접속 상태 확인
+        public static bool IsConnected(Socket a_Socket)
+        {
+            return !((a_Socket.Poll(1000, SelectMode.SelectRead) && (a_Socket.Available == 0)) || !a_Socket.Connected);
+        }
+    }
+}
